@@ -2,24 +2,10 @@
 export default {
   darkMode: ["class"],
   content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
-  ],
-  safelist: [
-    'bg-background',
-    'text-foreground',
-    'bg-card',
-    'text-card-foreground',
-    'bg-muted',
-    'text-muted-foreground',
-    'border-border',
-    'bg-primary',
-    'text-primary-foreground',
-    'bg-secondary',
-    'text-secondary-foreground',
+    './src/**/*.{ts,tsx}',
   ],
   theme: {
     container: {
