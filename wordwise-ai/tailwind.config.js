@@ -7,6 +7,17 @@ export default {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    // Force these classes to always be included
+    'bg-blue-500', 'bg-blue-600', 'text-white', 'bg-gray-50', 'bg-gray-100',
+    'text-gray-600', 'text-gray-700', 'text-gray-900', 'border-gray-200', 'border-gray-300',
+    'flex', 'items-center', 'justify-center', 'justify-between', 'gap-2', 'gap-4',
+    'space-y-4', 'space-y-2', 'p-4', 'p-6', 'mb-4', 'mb-6', 'mt-4', 'mt-6',
+    'text-lg', 'text-xl', 'text-2xl', 'font-semibold', 'font-bold', 'text-sm', 'text-xs',
+    'border', 'rounded-lg', 'rounded-md', 'rounded', 'shadow', 'shadow-md',
+    'max-w-4xl', 'mx-auto', 'container', 'w-full', 'min-h-screen',
+    'inline-flex', 'btn', 'button'
+  ],
   darkMode: ["class"],
   theme: {
     container: {

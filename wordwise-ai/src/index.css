@@ -1,3 +1,6 @@
+/* Import critical CSS as backup - must be first */
+@import url('/critical.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
