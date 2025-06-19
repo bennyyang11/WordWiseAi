@@ -12,14 +12,22 @@ export default defineConfig({
   },
   css: {
     postcss: './postcss.config.js',
+    devSourcemap: true
   },
   build: {
     outDir: 'dist',
     sourcemap: false,
     assetsDir: 'assets',
+    cssCodeSplit: false,
     rollupOptions: {
       output: {
         manualChunks: undefined,
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+            return 'assets/[name]-[hash].css'
+          }
+          return 'assets/[name]-[hash][extname]'
+        }
       }
     }
   }
