@@ -1,6 +1,11 @@
+import tailwindcss from 'tailwindcss'
+import autoprefixer from 'autoprefixer'
+
 export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
+  plugins: [
+    tailwindcss('./tailwind.config.js'),
+    autoprefixer({
+      overrideBrowserslist: ['> 1%', 'last 2 versions'],
+    }),
+  ],
 } 

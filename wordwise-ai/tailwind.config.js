@@ -8,15 +8,34 @@ export default {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   safelist: [
-    // Force these classes to always be included
-    'bg-blue-500', 'bg-blue-600', 'text-white', 'bg-gray-50', 'bg-gray-100',
-    'text-gray-600', 'text-gray-700', 'text-gray-900', 'border-gray-200', 'border-gray-300',
-    'flex', 'items-center', 'justify-center', 'justify-between', 'gap-2', 'gap-4',
-    'space-y-4', 'space-y-2', 'p-4', 'p-6', 'mb-4', 'mb-6', 'mt-4', 'mt-6',
-    'text-lg', 'text-xl', 'text-2xl', 'font-semibold', 'font-bold', 'text-sm', 'text-xs',
-    'border', 'rounded-lg', 'rounded-md', 'rounded', 'shadow', 'shadow-md',
-    'max-w-4xl', 'mx-auto', 'container', 'w-full', 'min-h-screen',
-    'inline-flex', 'btn', 'button'
+    // Essential layout classes
+    'bg-blue-500', 'bg-blue-600', 'bg-blue-700', 'text-white', 'bg-gray-50', 'bg-gray-100',
+    'text-gray-600', 'text-gray-700', 'text-gray-900', 'text-gray-500', 'border-gray-200', 'border-gray-300',
+    'flex', 'inline-flex', 'items-center', 'justify-center', 'justify-between', 'gap-2', 'gap-4', 'gap-6',
+    'space-y-4', 'space-y-2', 'space-y-6', 'space-x-2', 'space-x-3', 'space-x-4',
+    'p-2', 'p-3', 'p-4', 'p-6', 'p-8', 'px-2', 'px-3', 'px-4', 'px-6', 'py-1', 'py-2', 'py-3', 'py-4',
+    'mb-1', 'mb-2', 'mb-3', 'mb-4', 'mb-6', 'mb-8', 'mt-1', 'mt-2', 'mt-3', 'mt-4', 'mt-6', 'mt-8',
+    'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl',
+    'font-medium', 'font-semibold', 'font-bold',
+    'border', 'border-0', 'border-2', 'border-t', 'border-b', 'border-l', 'border-r',
+    'rounded', 'rounded-sm', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-full',
+    'shadow', 'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-xl',
+    'max-w-xs', 'max-w-sm', 'max-w-md', 'max-w-lg', 'max-w-xl', 'max-w-2xl', 'max-w-4xl', 'max-w-6xl',
+    'w-full', 'h-full', 'min-h-screen', 'min-h-full',
+    'container', 'mx-auto', 'my-auto',
+    'cursor-pointer', 'cursor-not-allowed',
+    'transition-colors', 'transition-all', 'duration-200', 'duration-300',
+    'hover:bg-blue-700', 'hover:bg-gray-50', 'hover:bg-gray-100', 'hover:shadow-md',
+    'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500', 'focus:ring-offset-2',
+    'disabled:opacity-50', 'disabled:cursor-not-allowed',
+    // Color variations
+    'bg-white', 'bg-green-50', 'bg-green-100', 'text-green-600', 'text-green-700', 'text-green-800',
+    'bg-red-50', 'bg-red-100', 'text-red-600', 'text-red-700', 'text-red-800',
+    'bg-yellow-50', 'bg-yellow-100', 'text-yellow-600', 'text-yellow-700', 'text-yellow-800',
+    'bg-purple-50', 'bg-purple-100', 'text-purple-600', 'text-purple-700', 'text-purple-800',
+    'border-green-200', 'border-red-200', 'border-yellow-200', 'border-purple-200',
+    // Specific component classes
+    'btn', 'button', 'card'
   ],
   darkMode: ["class"],
   theme: {
