@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   css: {
-    postcss: './postcss.config.js',
+    postcss: path.resolve(__dirname, './postcss.config.js'),
     devSourcemap: true,
     preprocessorOptions: {
       css: {

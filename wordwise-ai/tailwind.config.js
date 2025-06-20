@@ -4,8 +4,13 @@ export default {
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
     './src/**/*.{html,js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/utils/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/data/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/types/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/store/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/services/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   safelist: [
     // Essential layout classes
