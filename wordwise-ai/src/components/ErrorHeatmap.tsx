@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Info, BarChart3 } from 'lucide-react';
+import { X, TrendingUp, /* TrendingDown, */ AlertTriangle, CheckCircle, Info, BarChart3 } from 'lucide-react';
 import type { ErrorHeatmapData } from '../services/errorPatternService';
 import { errorPatternService } from '../services/errorPatternService';
 
@@ -115,7 +115,7 @@ const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ data, onClose }) => {
           </h3>
           
           <div className="space-y-4">
-            {categoryStats.map((category, index) => (
+            {categoryStats.map((category, _index) => (
               <div key={category.category} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">

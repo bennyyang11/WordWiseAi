@@ -12,7 +12,7 @@ type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
 
 const SampleContentGenerator: React.FC<SampleContentGeneratorProps> = ({ 
   writingType, 
-  onSampleSelect 
+  onSampleSelect: _onSampleSelect 
 }) => {
   const [selectedLevel, setSelectedLevel] = useState<DifficultyLevel>('intermediate');
   const [generatedContent, setGeneratedContent] = useState<string>('');
@@ -454,23 +454,22 @@ Your goal is to provide students with diverse, high-quality examples that showca
     }
   };
 
-  const getMockContent = (type: string, level: DifficultyLevel): string => {
-    const mockContent = {
-      essay: {
-        beginner: "Education is very important in our lives. It helps us learn new things and grow as people. When we go to school, we learn to read, write, and solve problems. Education also helps us get good jobs in the future. Without education, it is hard to understand the world around us. That is why all children should go to school and learn as much as they can.",
-        intermediate: "Education plays a crucial role in personal and social development. Through formal learning, individuals acquire essential skills, knowledge, and critical thinking abilities. A quality education system provides opportunities for students to explore diverse subjects and discover their talents. Furthermore, education promotes equality by giving everyone a chance to improve their circumstances. In today's competitive world, educational qualifications are often necessary for career advancement and economic stability.",
-        advanced: "The significance of education transcends mere academic achievement, encompassing the holistic development of individuals and the advancement of society. Contemporary educational paradigms emphasize not only the acquisition of knowledge but also the cultivation of analytical thinking, creativity, and emotional intelligence. Moreover, education serves as a catalyst for social mobility, enabling individuals from diverse backgrounds to transcend socioeconomic barriers and contribute meaningfully to their communities."
-      },
-      email: {
-        beginner: "Subject: Question about English Course\n\nDear Sir/Madam,\n\nI am writing to ask about your English course. I saw your advertisement online. Can you please tell me when the classes start? Also, how much does it cost?\n\nI am a beginner student. I want to learn English for my job.\n\nThank you for your time.\n\nBest regards,\nJohn Smith",
-        intermediate: "Subject: Application for Marketing Internship Position\n\nDear Ms. Johnson,\n\nI am writing to express my interest in the marketing internship position advertised on your company website. As a third-year business student at State University, I am eager to gain practical experience in digital marketing.\n\nI have completed coursework in marketing principles and social media management. Additionally, I have volunteered to manage social media accounts for local nonprofits, which has given me hands-on experience with content creation and audience engagement.\n\nI would appreciate the opportunity to discuss how my enthusiasm and academic background could contribute to your team.\n\nSincerely,\nSarah Martinez",
-        advanced: "Subject: Strategic Partnership Proposal - Collaborative Market Expansion\n\nDear Mr. Richardson,\n\nI hope this message finds you well. I am reaching out to propose a strategic collaboration between our organizations that could yield significant mutual benefits in the emerging Southeast Asian markets.\n\nOur preliminary market analysis indicates substantial synergies between your distribution capabilities and our innovative product portfolio. Specifically, I believe our complementary strengths could accelerate market penetration while optimizing operational efficiencies.\n\nI would welcome the opportunity to present a comprehensive proposal outlining the potential partnership framework, projected ROI metrics, and implementation timeline.\n\nLooking forward to your thoughts.\n\nBest regards,\nDavid Chen"
-      }
-    };
-
-    return mockContent[type as keyof typeof mockContent]?.[level] || 
-           "Sample content will be generated here. Click the generate button to create new content.";
-  };
+  // const _getMockContent = (_type: string, _level: DifficultyLevel): string => {
+  //   const mockContent = {
+  //     essay: {
+  //       beginner: "Education is very important in our lives...",
+  //       intermediate: "Education plays a crucial role...",
+  //       advanced: "The significance of education transcends..."
+  //     },
+  //     email: {
+  //       beginner: "Subject: Question about English Course...",
+  //       intermediate: "Subject: Application for Marketing Internship...",
+  //       advanced: "Subject: Strategic Partnership Proposal..."
+  //     }
+  //   };
+  //   return mockContent[_type as keyof typeof mockContent]?.[_level] || 
+  //          "Sample content will be generated here.";
+  // };
 
   const getRandomMockContent = (type: string, level: DifficultyLevel): string => {
     // Varied mock content to avoid repetition
@@ -525,11 +524,11 @@ Your goal is to provide students with diverse, high-quality examples that showca
     }
   };
 
-  const insertContent = () => {
-    if (onSampleSelect && generatedContent) {
-      onSampleSelect(generatedContent);
-    }
-  };
+  // const insertContent = () => {
+  //   if (onSampleSelect && generatedContent) {
+  //     onSampleSelect(generatedContent);
+  //   }
+  // };
 
   // Close dropdown when clicking outside
   React.useEffect(() => {

@@ -13,10 +13,10 @@ const EnhancedTextEditor: React.FC = () => {
     updateDocumentContent, 
     setSuggestions, 
     setIsAnalyzing,
-    setSelectedSuggestion,
+    // setSelectedSuggestion,
     userProfile,
     setCurrentDocument,
-    setUserProfile
+    // setUserProfile
   } = useWritingStore();
   
   const textAreaRef = useRef<HTMLDivElement>(null);
@@ -109,20 +109,20 @@ const EnhancedTextEditor: React.FC = () => {
   }, [userProfile, selectedLanguage, setSuggestions, setIsAnalyzing]);
 
   // Real-time debounced analysis
-  const debouncedAnalyze = useCallback(
-    (text: string) => {
-      if (userProfile?.preferences.realTimeAnalysis && text.trim().length > 5) {
-        console.log('🔍 Starting real-time multilingual analysis...');
-        enhancedAiService.analyzeTextDebounced(text, userProfile, (result) => {
-          console.log('⚡ Real-time analysis complete:', result.suggestions.length, 'suggestions');
-          setSuggestions(result.suggestions);
-          setIsAnalyzing(false);
-        }, 800);
-        setIsAnalyzing(true);
-      }
-    },
-    [userProfile, setSuggestions, setIsAnalyzing]
-  );
+  // const debouncedAnalyze = useCallback(
+  //   (text: string) => {
+  //     if (userProfile?.preferences.realTimeAnalysis && text.trim().length > 5) {
+  //       console.log('🔍 Starting real-time multilingual analysis...');
+  //       enhancedAiService.analyzeTextDebounced(text, userProfile, (result) => {
+  //         console.log('⚡ Real-time analysis complete:', result.suggestions.length, 'suggestions');
+  //         setSuggestions(result.suggestions);
+  //         setIsAnalyzing(false);
+  //       }, 800);
+  //       setIsAnalyzing(true);
+  //     }
+  //   },
+  //   [userProfile, setSuggestions, setIsAnalyzing]
+  // );
 
   // Debounced text change handler  
   const debouncedTextChange = useCallback(
@@ -154,7 +154,7 @@ const EnhancedTextEditor: React.FC = () => {
     }
   }, [activeSuggestion, debouncedTextChange]);
 
-  const handleTextChange = handleContentEditableChange;
+  // const handleTextChange = handleContentEditableChange;
 
   // Handle clicking on textarea to close any open tooltips
   const handleTextAreaClick = () => {
@@ -220,25 +220,25 @@ const EnhancedTextEditor: React.FC = () => {
   }, [suggestions, setSuggestions]);
 
   // Accept all suggestions
-  const acceptAllSuggestions = useCallback(() => {
-    if (!currentDocument || suggestions.length === 0) return;
-    
-    let content = currentDocument.content;
-    
-    // Sort suggestions by position (reverse order to apply from end to start)
-    const sortedSuggestions = [...suggestions].sort((a, b) => b.position.start - a.position.start);
-    
-    sortedSuggestions.forEach(suggestion => {
-      content = content.substring(0, suggestion.position.start) + 
-                suggestion.suggestedText + 
-                content.substring(suggestion.position.end);
-    });
-    
-    updateDocumentContent(content);
-    setSuggestions([]);
-    setActiveSuggestion(null);
-    setTooltipPosition(null);
-  }, [currentDocument, suggestions, updateDocumentContent, setSuggestions]);
+  // const acceptAllSuggestions = useCallback(() => {
+  //   if (!currentDocument || suggestions.length === 0) return;
+  //   
+  //   let content = currentDocument.content;
+  //   
+  //   // Sort suggestions by position (reverse order to apply from end to start)
+  //   const sortedSuggestions = [...suggestions].sort((a, b) => b.position.start - a.position.start);
+  //   
+  //   sortedSuggestions.forEach(suggestion => {
+  //     content = content.substring(0, suggestion.position.start) + 
+  //               suggestion.suggestedText + 
+  //               content.substring(suggestion.position.end);
+  //   });
+  //   
+  //   updateDocumentContent(content);
+  //   setSuggestions([]);
+  //   setActiveSuggestion(null);
+  //   setTooltipPosition(null);
+  // }, [currentDocument, suggestions, updateDocumentContent, setSuggestions]);
 
   // Render text with highlights 
   const renderTextWithHighlights = () => {

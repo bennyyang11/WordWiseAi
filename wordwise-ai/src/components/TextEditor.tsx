@@ -1,13 +1,13 @@
-import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { useWritingStore } from '../store/writingStore';
 import { enhancedAiService } from '../services/enhancedAiService';
 import { vocabularyFeedbackService } from '../services/vocabularyFeedbackService';
 import { checkPlagiarism } from '../services/plagiarismService';
 import { errorPatternService } from '../services/errorPatternService';
 import { debounce } from '../utils/debounce';
-import SuggestionsPanel from './SuggestionsPanel';
+// import SuggestionsPanel from './SuggestionsPanel';
 import ErrorHeatmap from './ErrorHeatmap';
-import { ChevronUp, ChevronDown, Check, X, BookOpen, Users, Lightbulb, BookOpenText } from 'lucide-react';
+import { Check, X, BookOpen, Users, Lightbulb, BookOpenText } from 'lucide-react';
 import type { Suggestion } from '../types';
 
 const TextEditor: React.FC = () => {
@@ -18,12 +18,12 @@ const TextEditor: React.FC = () => {
     updateDocumentContent, 
     setSuggestions, 
     setIsAnalyzing,
-    setAnalysisResult,
+    // setAnalysisResult,
     applySuggestion: storeApplySuggestion,
-    dismissSuggestion: storeDismissSuggestion,
+    dismissSuggestion: _storeDismissSuggestion,
     userProfile,
     setCurrentDocument,
-    setSelectedSuggestion,
+    // setSelectedSuggestion,
     goalBasedFeedback,
     isGeneratingGoalFeedback,
     setGoalBasedFeedback,
@@ -49,7 +49,7 @@ const TextEditor: React.FC = () => {
   
   const textAreaRef = useRef<HTMLDivElement>(null);
   const [showSampleModal, setShowSampleModal] = useState(false);
-  const [isLoadingSample, setIsLoadingSample] = useState(false);
+  // const [isLoadingSample, setIsLoadingSample] = useState(false);
   const [isErrorIndicatorDismissed, setIsErrorIndicatorDismissed] = useState(false);
   const [showPlagiarismModal, setShowPlagiarismModal] = useState(false);
   const [isProgrammaticUpdate, setIsProgrammaticUpdate] = useState(false);
@@ -398,7 +398,7 @@ const TextEditor: React.FC = () => {
     }
   }, [updateDocumentContent, saveCursorPosition, restoreCursorPosition]);
 
-  const handleTextChange = handleContentEditableChange;
+  // const handleTextChange = handleContentEditableChange;
 
   // Handle clicking on highlighted suggestions
   const handleSuggestionClick = useCallback((suggestion: any, e: React.MouseEvent) => {
@@ -430,7 +430,7 @@ const TextEditor: React.FC = () => {
   }, []);
 
   // Handle clicking on textarea to close any open tooltips or handle suggestion clicks
-  const handleTextAreaClick = useCallback((e: React.MouseEvent) => {
+  const handleTextAreaClick = useCallback((_e: React.MouseEvent) => {
     // Close existing tooltips when clicking on the text area
     if (activeSuggestion) {
       setActiveSuggestion(null);
@@ -518,7 +518,7 @@ const TextEditor: React.FC = () => {
       return textAtPosition === suggestion.originalText;
     }).sort((a, b) => a.position.start - b.position.start);
 
-    validSuggestions.forEach((suggestion, index) => {
+    validSuggestions.forEach((suggestion, _index) => {
       // Add text before this suggestion
       result += content.substring(lastIndex, suggestion.position.start);
       
@@ -1087,7 +1087,7 @@ const TextEditor: React.FC = () => {
   // Load static sample content or generate AI content
   const loadSampleContent = async (level: 'beginner' | 'intermediate' | 'advanced' | 'ai-generated') => {
     setShowSampleModal(false);
-    setIsLoadingSample(true); // Prevent auto-analysis during loading
+    // setIsLoadingSample(true); // Prevent auto-analysis during loading
     
     if (level === 'ai-generated') {
       // Generate new AI content using OpenAI
@@ -1323,7 +1323,7 @@ Your goal is to provide students with diverse, high-quality examples.`
       } finally {
         setIsAnalyzing(false);
         // Re-enable auto-analysis after a short delay to let content settle
-        setTimeout(() => setIsLoadingSample(false), 500);
+        // setTimeout(() => setIsLoadingSample(false), 500);
       }
     } else {
       // Load static sample content
@@ -1341,7 +1341,7 @@ Your goal is to provide students with diverse, high-quality examples.`
         updateDocumentContent(content);
       }
       // Re-enable auto-analysis after a short delay to let content settle
-      setTimeout(() => setIsLoadingSample(false), 500);
+      // setTimeout(() => setIsLoadingSample(false), 500);
     }
   };
 
@@ -1768,7 +1768,7 @@ Your goal is to provide students with diverse, high-quality examples.`
                     Potential Matches ({plagiarismReport.matches.length})
                   </h3>
                   <div className="space-y-4">
-                    {plagiarismReport.matches.map((match, index) => (
+                    {plagiarismReport.matches.map((match, _index) => (
                       <div key={match.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">

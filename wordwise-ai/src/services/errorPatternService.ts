@@ -105,7 +105,7 @@ class ErrorPatternService {
   }
 
   private initializeDefaultPatterns() {
-    Object.entries(ERROR_CATEGORIES).forEach(([key, category]) => {
+    Object.entries(ERROR_CATEGORIES).forEach(([_key, category]) => {
       category.subcategories.forEach(subcategory => {
         const patternKey = `${category.name}_${subcategory}`;
         if (!this.patterns.has(patternKey)) {

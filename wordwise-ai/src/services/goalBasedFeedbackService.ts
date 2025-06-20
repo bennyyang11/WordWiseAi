@@ -305,7 +305,7 @@ Provide comprehensive goal-based feedback that helps the student excel in ${writ
     return this.getMockGoalBasedFeedback('', writingGoal);
   }
 
-  private getMockGoalBasedFeedback(text: string, writingGoal: WritingGoal, nativeLanguage?: string): GoalBasedFeedback {
+  private getMockGoalBasedFeedback(_text: string, writingGoal: WritingGoal, nativeLanguage?: string): GoalBasedFeedback {
     const createBilingualText = (english: string, nativeTranslation?: string): string => {
       if (nativeLanguage && nativeLanguage.toLowerCase() !== 'english' && nativeTranslation) {
         return `${english} | ${nativeTranslation}`;

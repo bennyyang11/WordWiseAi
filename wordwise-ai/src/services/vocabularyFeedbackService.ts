@@ -167,7 +167,7 @@ IMPORTANT:
 - Suggest 2-3 alternative words with context`;
   }
 
-  private validateAndFormatFeedback(feedback: any, originalText: string): VocabularyFeedback {
+  private validateAndFormatFeedback(feedback: any, _originalText: string): VocabularyFeedback {
     // Validate required properties and provide defaults
     return {
       overallScore: Math.max(0, Math.min(100, feedback.overallScore || 75)),
@@ -197,7 +197,7 @@ IMPORTANT:
     return mockFeedback;
   }
 
-  private getMockComplexWords(text: string, level: string): VocabularyWord[] {
+  private getMockComplexWords(_text: string, level: string): VocabularyWord[] {
     const complexWords: Record<string, VocabularyWord[]> = {
       beginner: [
         {
@@ -223,7 +223,7 @@ IMPORTANT:
     return complexWords[level] || [];
   }
 
-  private getMockSimpleWords(text: string, level: string): VocabularyWord[] {
+  private getMockSimpleWords(_text: string, level: string): VocabularyWord[] {
     const simpleWords: Record<string, VocabularyWord[]> = {
       beginner: [],
       intermediate: [

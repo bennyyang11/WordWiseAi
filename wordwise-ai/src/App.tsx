@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, CheckCircle, Users, TrendingUp, FileText, Save, Download, AlertTriangle, Lightbulb, Mail, FileEdit, BarChart3, PenTool, MessageCircle, ArrowLeft, Globe } from "lucide-react";
-import SampleContentGenerator from './components/SampleContentGenerator';
+// import SampleContentGenerator from './components/SampleContentGenerator';
 import { Toaster } from 'react-hot-toast';
 import TextEditor from './components/TextEditor';
 import BilingualDemo from './components/BilingualDemo';
@@ -12,7 +12,7 @@ import QuickLanguageTest from './components/QuickLanguageTest';
 import { useWritingStore } from './store/writingStore';
 import { authService } from './services/authService';
 import { goalBasedFeedbackService } from './services/goalBasedFeedbackService';
-import type { User } from 'firebase/auth';
+// import type { User } from 'firebase/auth';
 import type { AuthState } from './services/authService';
 
 function App() {
@@ -21,9 +21,9 @@ function App() {
     suggestions, 
     analysisResult, 
     isAnalyzing, 
-    updateDocumentContent,
-    goalBasedFeedback,
-    isGeneratingGoalFeedback,
+    // updateDocumentContent,
+    // goalBasedFeedback,
+    // isGeneratingGoalFeedback,
     setGoalBasedFeedback,
     setIsGeneratingGoalFeedback,
     aiWritingSuggestions,
@@ -31,7 +31,7 @@ function App() {
     setAIWritingSuggestions,
     setIsGeneratingAISuggestions,
     userProfile,
-    setUserProfile
+    // setUserProfile
   } = useWritingStore();
   
   // Firebase Authentication State
@@ -212,16 +212,16 @@ function App() {
     setIsGeneratingAISuggestions(false);
   };
 
-  const backToHome = () => {
-    setIsWriting(false);
-    setWritingType(null);
-    setDemoMode('none'); // Reset demo mode when going back home
-    // Clear all feedback and suggestions
-    setGoalBasedFeedback(null);
-    setIsGeneratingGoalFeedback(false);
-    setAIWritingSuggestions(null);
-    setIsGeneratingAISuggestions(false);
-  };
+  // const backToHome = () => {
+  //   setIsWriting(false);
+  //   setWritingType(null);
+  //   setDemoMode('none'); // Reset demo mode when going back home
+  //   // Clear all feedback and suggestions
+  //   setGoalBasedFeedback(null);
+  //   setIsGeneratingGoalFeedback(false);
+  //   setAIWritingSuggestions(null);
+  //   setIsGeneratingAISuggestions(false);
+  // };
 
   // Analysis is now handled by the TextEditor component via the writing store
 
@@ -538,8 +538,9 @@ function App() {
             </div>
           </div>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   // Demo Mode Rendering
   if (authState.user && demoMode !== 'none') {
