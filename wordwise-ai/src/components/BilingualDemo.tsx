@@ -78,7 +78,7 @@ const BilingualDemo: React.FC = () => {
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="w-full h-40 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+              className="w-full h-40 p-4 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
               placeholder="Enter text with errors to see multilingual suggestions..."
             />
 
