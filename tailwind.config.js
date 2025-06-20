@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-console.log('🔧 Loading Tailwind config from wordwise-ai/tailwind.config.js');
+console.log('🔧 Loading Tailwind config from ROOT level for Vercel');
 
 export default {
   content: [
