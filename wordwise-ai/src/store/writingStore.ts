@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import type { Document, Suggestion, AnalysisResult, UserProfile } from '../types';
+import type { GoalBasedFeedback, AIWritingSuggestions } from '../services/goalBasedFeedbackService';
+import type { VocabularyFeedback } from '../services/vocabularyFeedbackService';
+import type { PlagiarismReport } from '../services/plagiarismService';
+import type { ErrorHeatmapData } from '../services/errorPatternService';
 
 interface WritingState {
   currentDocument: Document | null;
@@ -8,6 +12,16 @@ interface WritingState {
   isAnalyzing: boolean;
   selectedSuggestion: Suggestion | null;
   userProfile: UserProfile | null;
+  goalBasedFeedback: GoalBasedFeedback | null;
+  isGeneratingGoalFeedback: boolean;
+  aiWritingSuggestions: AIWritingSuggestions | null;
+  isGeneratingAISuggestions: boolean;
+  vocabularyFeedback: VocabularyFeedback | null;
+  isGeneratingVocabularyFeedback: boolean;
+  plagiarismReport: PlagiarismReport | null;
+  isCheckingPlagiarism: boolean;
+  errorHeatmapData: ErrorHeatmapData | null;
+  showErrorHeatmap: boolean;
   
   // Actions
   setCurrentDocument: (document: Document) => void;
@@ -19,6 +33,16 @@ interface WritingState {
   applySuggestion: (suggestionId: string) => void;
   dismissSuggestion: (suggestionId: string) => void;
   setUserProfile: (profile: UserProfile) => void;
+  setGoalBasedFeedback: (feedback: GoalBasedFeedback | null) => void;
+  setIsGeneratingGoalFeedback: (generating: boolean) => void;
+  setAIWritingSuggestions: (suggestions: AIWritingSuggestions | null) => void;
+  setIsGeneratingAISuggestions: (generating: boolean) => void;
+  setVocabularyFeedback: (feedback: VocabularyFeedback | null) => void;
+  setIsGeneratingVocabularyFeedback: (generating: boolean) => void;
+  setPlagiarismReport: (report: PlagiarismReport | null) => void;
+  setIsCheckingPlagiarism: (checking: boolean) => void;
+  setErrorHeatmapData: (data: ErrorHeatmapData | null) => void;
+  setShowErrorHeatmap: (show: boolean) => void;
 }
 
 export const useWritingStore = create<WritingState>((set, get) => ({
@@ -55,12 +79,22 @@ export const useWritingStore = create<WritingState>((set, get) => ({
       realTimeAnalysis: true,
     },
   },
+  goalBasedFeedback: null,
+  isGeneratingGoalFeedback: false,
+  aiWritingSuggestions: null,
+  isGeneratingAISuggestions: false,
+  vocabularyFeedback: null,
+  isGeneratingVocabularyFeedback: false,
+  plagiarismReport: null,
+  isCheckingPlagiarism: false,
+  errorHeatmapData: null,
+  showErrorHeatmap: false,
 
   setCurrentDocument: (document) => set({ currentDocument: document }),
   
   updateDocumentContent: (content) => {
     const state = get();
-    if (state.currentDocument) {
+    if (state.currentDocument && state.currentDocument.content !== content) {
       const updatedDocument = {
         ...state.currentDocument,
         content,
@@ -139,4 +173,24 @@ export const useWritingStore = create<WritingState>((set, get) => ({
   },
   
   setUserProfile: (profile) => set({ userProfile: profile }),
+  
+  setGoalBasedFeedback: (feedback) => set({ goalBasedFeedback: feedback }),
+  
+  setIsGeneratingGoalFeedback: (generating) => set({ isGeneratingGoalFeedback: generating }),
+  
+  setAIWritingSuggestions: (suggestions) => set({ aiWritingSuggestions: suggestions }),
+  
+  setIsGeneratingAISuggestions: (generating) => set({ isGeneratingAISuggestions: generating }),
+  
+  setVocabularyFeedback: (feedback) => set({ vocabularyFeedback: feedback }),
+  
+  setIsGeneratingVocabularyFeedback: (generating) => set({ isGeneratingVocabularyFeedback: generating }),
+  
+  setPlagiarismReport: (report) => set({ plagiarismReport: report }),
+  
+  setIsCheckingPlagiarism: (checking) => set({ isCheckingPlagiarism: checking }),
+  
+  setErrorHeatmapData: (data) => set({ errorHeatmapData: data }),
+  
+  setShowErrorHeatmap: (show) => set({ showErrorHeatmap: show }),
 })); 

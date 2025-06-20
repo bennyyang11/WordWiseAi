@@ -1,292 +1,300 @@
 import React, { useState } from 'react';
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { BookOpen, CheckCircle, Users, TrendingUp, AlertCircle, Mail } from "lucide-react";
+import { signIn, signUp, signInWithGoogle } from '../services/authService';
+import toast from 'react-hot-toast';
 
-interface AuthPageProps {
-  onLogin: (user: any) => void;
-}
-
-const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [nativeLanguage, setNativeLanguage] = useState('');
-  const [englishLevel, setEnglishLevel] = useState('intermediate');
+const AuthPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: '',
+    nativeLanguage: '',
+    englishLevel: 'intermediate'
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simple validation
-    if (!email || !password) {
-      alert('Please fill in all fields');
-      setIsLoading(false);
-      return;
-    }
-    
-    if (isSignUp && (!name || !nativeLanguage)) {
-      alert('Please fill in all fields');
-      setIsLoading(false);
-      return;
-    }
 
-    // Simulate loading
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Create user object
-    const user = {
-      id: Date.now().toString(),
-      email,
-      name: isSignUp ? name : 'User',
-      nativeLanguage: isSignUp ? nativeLanguage : 'English',
-      englishLevel,
-      writingGoals: {
-        type: 'academic',
-        targetWordCount: 500,
-        targetAudience: 'professor',
-        formalityLevel: 'formal',
-        essayType: 'argumentative',
-      },
-      preferences: {
-        showExplanations: true,
-        highlightComplexWords: true,
-        suggestSimplifications: true,
-        realTimeAnalysis: true,
+    try {
+      if (isSignUp) {
+        if (!formData.name || !formData.nativeLanguage) {
+          toast.error('Please fill in all fields');
+          return;
+        }
+        await signUp(
+          formData.email,
+          formData.password,
+          formData.name,
+          formData.nativeLanguage,
+          formData.englishLevel
+        );
+        toast.success('Account created successfully! Please check your email for verification.');
+      } else {
+        await signIn(formData.email, formData.password);
+        toast.success('Welcome back!');
       }
-    };
+    } catch (error: any) {
+      toast.error(error.message || 'Authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    setIsLoading(false);
-    onLogin(user);
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      toast.success('Welcome to WordWise AI!');
+    } catch (error: any) {
+      toast.error(error.message || 'Google sign-in failed');
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <div style={{ width: '2rem', height: '2rem', backgroundColor: '#2563eb', borderRadius: '0.25rem', marginRight: '0.5rem' }}></div>
-              <h1 className="text-2xl font-bold text-gray-900">WordWise AI</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+        {/* Left side - Features */}
+        <div className="space-y-8">
+          <div className="text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start space-x-2 mb-4">
+              <BookOpen className="h-10 w-10 text-primary" />
+              <h1 className="text-4xl font-bold text-gray-900">WordWise AI</h1>
             </div>
-            <div className="text-sm text-gray-600">
+            <p className="text-xl text-gray-600 mb-8">
               AI-Powered Writing Assistant for ESL Students
+            </p>
+          </div>
+
+          <div className="grid gap-6">
+            <div className="flex items-start space-x-4">
+              <div className="bg-green-100 p-3 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Real-time Grammar Check</h3>
+                <p className="text-gray-600">Instant feedback on grammar, punctuation, and sentence structure</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Writing Enhancement</h3>
+                <p className="text-gray-600">Improve vocabulary, style, and academic writing skills</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-purple-100 p-3 rounded-lg">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">ESL Focused</h3>
+                <p className="text-gray-600">Specialized feedback for English as Second Language learners</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-orange-100 p-3 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Progress Tracking</h3>
+                <p className="text-gray-600">Monitor your improvement with detailed analytics</p>
+              </div>
             </div>
           </div>
         </div>
-      </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left side - Features */}
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Improve Your English Writing with AI
-              </h2>
-              <p className="text-xl text-gray-600 mb-8">
-                WordWise AI helps ESL students write better English with real-time feedback, 
-                grammar correction, and personalized learning suggestions.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-start space-x-3">
-                <div style={{ width: '1.5rem', height: '1.5rem', backgroundColor: '#2563eb', borderRadius: '50%', marginTop: '0.25rem' }}></div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Real-time Grammar Check</h3>
-                  <p className="text-sm text-gray-600">Get instant feedback on grammar, spelling, and punctuation errors as you write.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <div style={{ width: '1.5rem', height: '1.5rem', backgroundColor: '#2563eb', borderRadius: '50%', marginTop: '0.25rem' }}></div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Writing Enhancement</h3>
-                  <p className="text-sm text-gray-600">Improve vocabulary, sentence structure, and writing style with AI-powered suggestions.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <div style={{ width: '1.5rem', height: '1.5rem', backgroundColor: '#2563eb', borderRadius: '50%', marginTop: '0.25rem' }}></div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">ESL Focused</h3>
-                  <p className="text-sm text-gray-600">Designed specifically for English as Second Language learners with personalized feedback.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <div style={{ width: '1.5rem', height: '1.5rem', backgroundColor: '#2563eb', borderRadius: '50%', marginTop: '0.25rem' }}></div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Progress Tracking</h3>
-                  <p className="text-sm text-gray-600">Monitor your writing improvement over time with detailed analytics and insights.</p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ backgroundColor: '#dbeafe', borderRadius: '0.5rem', padding: '1.5rem' }}>
-              <h3 className="font-semibold text-blue-900 mb-2">Perfect for:</h3>
-              <ul className="space-y-1 text-sm" style={{ color: '#1e3a8a' }}>
-                <li>• ESL students preparing for exams</li>
-                <li>• Academic essay writing</li>
-                <li>• Professional email composition</li>
-                <li>• Creative writing practice</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Right side - Auth Form */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {isSignUp ? 'Create Your Account' : 'Welcome Back'}
-              </h2>
-              <p className="text-gray-600">
+        {/* Right side - Authentication Form */}
+        <div className="flex justify-center">
+          <Card className="w-full max-w-md">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl text-center">
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
+              </CardTitle>
+              <CardDescription className="text-center">
                 {isSignUp 
-                  ? 'Join thousands of students improving their English writing' 
-                  : 'Sign in to continue your writing journey'
+                  ? 'Start your journey to better writing' 
+                  : 'Sign in to continue improving your writing'
                 }
-              </p>
-            </div>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Google Sign In Button */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mb-4"
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading || isLoading}
+              >
+                {isGoogleLoading ? (
+                  <>
+                    <AlertCircle className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in with Google...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Continue with Google
+                  </>
+                )}
+              </Button>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {isSignUp && (
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required={isSignUp}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                  />
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
                 </div>
-              )}
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                />
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or continue with email
+                  </span>
+                </div>
               </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete={isSignUp ? "new-password" : "current-password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                />
-              </div>
-
-              {isSignUp && (
-                <>
-                  <div>
-                    <label htmlFor="nativeLanguage" className="block text-sm font-medium text-gray-700 mb-2">
-                      Native Language
-                    </label>
-                    <input
-                      id="nativeLanguage"
-                      name="nativeLanguage"
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {isSignUp && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
                       type="text"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Enter your full name"
                       required={isSignUp}
-                      value={nativeLanguage}
-                      onChange={(e) => setNativeLanguage(e.target.value)}
-                      placeholder="e.g., Spanish, Chinese, French"
+                      disabled={isLoading}
                     />
                   </div>
-
-                  <div>
-                    <label htmlFor="englishLevel" className="block text-sm font-medium text-gray-700 mb-2">
-                      English Level
-                    </label>
-                    <select
-                      id="englishLevel"
-                      name="englishLevel"
-                      value={englishLevel}
-                      onChange={(e) => setEnglishLevel(e.target.value)}
-                    >
-                      <option value="beginner">Beginner</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="advanced">Advanced</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all ${
-                  isLoading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    {isSignUp ? 'Creating Account...' : 'Signing In...'}
-                  </div>
-                ) : (
-                  isSignUp ? 'Create Account' : 'Sign In'
                 )}
-              </button>
-            </form>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter your email"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter your password"
+                    required
+                    disabled={isLoading}
+                  />
+                  {isSignUp && (
+                    <p className="text-xs text-muted-foreground">
+                      Password should be at least 6 characters long
+                    </p>
+                  )}
+                </div>
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-blue-600 font-medium"
-                style={{ background: 'none', border: 'none', padding: '0.5rem' }}
-              >
-                {isSignUp 
-                  ? 'Already have an account? Sign in' 
-                  : "Don't have an account? Sign up"
-                }
-              </button>
-            </div>
+                {isSignUp && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="nativeLanguage">Native Language</Label>
+                      <Input
+                        id="nativeLanguage"
+                        name="nativeLanguage"
+                        type="text"
+                        value={formData.nativeLanguage}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Spanish, Chinese, French"
+                        required={isSignUp}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="englishLevel">English Level</Label>
+                      <select
+                        id="englishLevel"
+                        name="englishLevel"
+                        value={formData.englishLevel}
+                        onChange={handleInputChange}
+                        disabled={isLoading}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                      </select>
+                    </div>
+                  </>
+                )}
 
-            {isSignUp && (
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <p style={{ fontSize: '0.75rem', color: '#4b5563', textAlign: 'center' }}>
-                  By creating an account, you agree to our Terms of Service and Privacy Policy.
-                  Your writing data is kept secure and private.
-                </p>
+                <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+                  {isLoading ? (
+                    <>
+                      <AlertCircle className="mr-2 h-4 w-4 animate-spin" />
+                      {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                    </>
+                  ) : (
+                    isSignUp ? 'Create Account' : 'Sign In'
+                  )}
+                </Button>
+              </form>
+
+              <div className="mt-4 text-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-sm"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  disabled={isLoading || isGoogleLoading}
+                >
+                  {isSignUp 
+                    ? 'Already have an account? Sign in' 
+                    : "Don't have an account? Sign up"
+                  }
+                </Button>
               </div>
-            )}
-          </div>
+
+              {isSignUp && (
+                <div className="mt-4 p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground text-center">
+                    By creating an account, you agree to our Terms of Service and Privacy Policy.
+                    We'll send you a verification email to confirm your account.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-50" style={{ borderTop: '1px solid #e5e7eb' }}>
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center text-gray-600">
-            <p>&copy; 2024 WordWise AI. Empowering ESL students worldwide.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

@@ -10,7 +10,7 @@ export interface Document {
 
 export interface Suggestion {
   id: string;
-  type: 'grammar' | 'vocabulary' | 'style' | 'clarity';
+  type: 'grammar' | 'spelling' | 'vocabulary' | 'style' | 'clarity';
   severity: 'error' | 'warning' | 'suggestion';
   originalText: string;
   suggestedText: string;
@@ -28,11 +28,30 @@ export interface AnalysisResult {
   overallScore: number;
   suggestions: Suggestion[];
   metrics: {
+    wordCount: number;
+    sentenceCount: number;
+    paragraphCount: number;
     readabilityScore: number;
-    grammarScore: number;
-    vocabularyScore: number;
-    styleScore: number;
+    averageWordsPerSentence: number;
+    complexWords: number;
+    passiveVoiceCount: number;
+    grammarScore?: number;
+    vocabularyScore?: number;
+    styleScore?: number;
   };
   strengths: string[];
   areasForImprovement: string[];
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  nativeLanguage: string;
+  englishLevel: 'beginner' | 'intermediate' | 'advanced';
+  preferences: {
+    realTimeAnalysis: boolean;
+  };
+  writingGoals: {
+    targetWordCount: number;
+  };
 } 

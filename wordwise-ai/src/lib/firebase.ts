@@ -1,6 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import type { Auth } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -33,29 +35,21 @@ const validateFirebaseConfig = () => {
   return true;
 };
 
-// Initialize Firebase only if configuration is valid
-let app;
-let auth;
-let db;
+// Initialize Firebase - Production Only
+let app: any;
+let auth: Auth;
+let db: Firestore;
 
-try {
-  if (validateFirebaseConfig()) {
-    console.log('🔥 Initializing Firebase...');
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    
-    // Enable persistence for offline support
-    auth.useDeviceLanguage();
-    
-    console.log('✅ Firebase initialized successfully');
-  } else {
-    throw new Error('Firebase configuration validation failed');
-  }
-} catch (error) {
-  console.error('❌ Firebase initialization failed:', error);
-  throw error;
+if (!validateFirebaseConfig()) {
+  throw new Error('Firebase configuration validation failed');
 }
+
+app = initializeApp(firebaseConfig);
+auth = getAuth(app);
+db = getFirestore(app);
+
+// Configure for production use
+auth.useDeviceLanguage();
 
 export { auth, db };
 export default app; 

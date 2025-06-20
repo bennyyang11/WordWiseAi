@@ -4,7 +4,7 @@ export interface Document {
   content: string;
   createdAt: Date;
   updatedAt: Date;
-  type: 'essay' | 'paragraph' | 'draft';
+  type: 'essay' | 'email' | 'letter' | 'report' | 'creative' | 'conversation';
   wordCount: number;
 }
 

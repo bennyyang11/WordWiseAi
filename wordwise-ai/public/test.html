@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordWise AI Test</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: Inter, system-ui, sans-serif;
+            background: white;
+            color: #1f2937;
+            padding: 2rem;
+        }
+        .test-button {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 6px !important;
+            padding: 12px 24px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            margin: 10px !important;
+        }
+        .test-button:hover {
+            background-color: #2563eb !important;
+        }
+        .test-card {
+            border: 1px solid #d1d5db !important;
+            border-radius: 8px !important;
+            padding: 24px !important;
+            background: white !important;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+            margin: 20px 0 !important;
+        }
+        .test-title {
+            font-size: 24px !important;
+            font-weight: 600 !important;
+            margin-bottom: 16px !important;
+        }
+        .test-container {
+            max-width: 800px !important;
+            margin: 0 auto !important;
+        }
+        .flex {
+            display: flex !important;
+            gap: 16px !important;
+            align-items: center !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">WordWise AI Styling Test</h1>
+        
+        <div class="test-card">
+            <h2>Test Card</h2>
+            <p>This is a test to see if basic styling works in Vercel production.</p>
+            <div class="flex">
+                <button class="test-button">Test Button 1</button>
+                <button class="test-button">Test Button 2</button>
+                <button class="test-button">Test Button 3</button>
+            </div>
+        </div>
+        
+        <div class="test-card">
+            <h2>If you see this properly styled:</h2>
+            <ul>
+                <li>✅ Blue buttons with white text</li>
+                <li>✅ Proper card styling with borders and shadow</li>
+                <li>✅ Good typography and spacing</li>
+            </ul>
+            <p><strong>Then basic CSS works and the issue is with React component styling.</strong></p>
+        </div>
+    </div>
+</body>
+</html> 
