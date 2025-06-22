@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle, XCircle, RefreshCw, Bug, Info } from "lucide-react";
 import { testFirebaseConnection, getFirebaseErrorAdvice, type FirebaseTestResult } from '../utils/firebaseTest';
-import { auth, db } from '../lib/firebase';
+import { auth } from '../lib/firebase';
 import type { AuthState } from '../services/authService';
 
 interface DebugPanelProps {

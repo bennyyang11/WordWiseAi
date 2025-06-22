@@ -281,7 +281,7 @@ export const checkPlagiarism = async (content: string): Promise<PlagiarismReport
 
   try {
     console.log('🤖 Using AI to detect plagiarism and find actual sources...');
-    const matches = await intelligentPlagiarismDetection(content, apiKey);
+    const matches = await intelligentPlagiarismDetection(content, apiKey || '');
     
     // Calculate overall similarity
     const wordCount = content.split(/\s+/).length;

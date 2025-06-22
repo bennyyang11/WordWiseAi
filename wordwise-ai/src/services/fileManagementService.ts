@@ -56,7 +56,7 @@ class FileManagementService {
     }
   }
 
-  private async performSave(userId: string, title?: string, type?: string): Promise<SaveResult> {
+  private async performSave(userId: string, title?: string, _type?: string): Promise<SaveResult> {
     try {
       const store = useWritingStore.getState();
       const currentDoc = store.currentDocument;
@@ -107,7 +107,7 @@ class FileManagementService {
   }
 
   // Load a specific file
-  async loadFile(fileId: string): Promise<LoadResult> {
+  async loadFile(_fileId: string): Promise<LoadResult> {
     try {
       // For now, we'll use a simple approach since userService doesn't have getEssayById
       // We'll need to add this method to userService in the future

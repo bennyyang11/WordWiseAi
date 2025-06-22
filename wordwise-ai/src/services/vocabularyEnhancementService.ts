@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import { translationService } from './translationService';
 import type { UserProfile } from '../types';
 
 export interface VocabularySuggestion {
@@ -268,54 +267,7 @@ IMPORTANT: Focus on identifying the exact words that appear in the text. Don't w
     return null;
   }
 
-  private getMockVocabularyAnalysis(text: string, userProfile: UserProfile): VocabularySuggestion[] {
-    const suggestions: VocabularySuggestion[] = [];
-    
-    const createBilingualMessage = (englishMsg: string): string => {
-      return translationService.createBilingualMessage(englishMsg, userProfile.nativeLanguage);
-    };
 
-    const patterns = [
-      {
-        regex: /\bvery good\b/gi,
-        suggestion: 'excellent',
-        message: 'Consider using more precise vocabulary',
-        explanation: 'Excellent is more specific than "very good"'
-      },
-      {
-        regex: /\bshow\b/gi,
-        suggestion: 'demonstrate',
-        message: 'Consider using more academic vocabulary', 
-        explanation: 'Demonstrate is more formal than "show"'
-      },
-      {
-        regex: /\ba lot of\b/gi,
-        suggestion: 'numerous',
-        message: 'Consider using more formal vocabulary',
-        explanation: 'Numerous is more academic than "a lot of"'
-      }
-    ];
-    
-    patterns.forEach((pattern, index) => {
-      let match;
-      while ((match = pattern.regex.exec(text)) !== null) {
-        suggestions.push({
-          id: `vocab-${index}-${match.index}`,
-          type: 'vocabulary',
-          severity: 'suggestion',
-          message: createBilingualMessage(pattern.message),
-          originalText: match[0],
-          suggestedText: pattern.suggestion,
-          explanation: createBilingualMessage(pattern.explanation),
-          position: { start: match.index, end: match.index + match[0].length },
-          confidence: 85,
-          alternatives: []
-        });
-      }
-    });
-
-    return suggestions;
-  }
 }
 
 export const vocabularyEnhancementService = new VocabularyEnhancementService(); 

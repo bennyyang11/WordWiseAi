@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, CheckCircle, Users, TrendingUp, FileText, Save, Download, AlertTriangle, Lightbulb, Mail, FileEdit, BarChart3, PenTool, MessageCircle, ArrowLeft, Globe, Folder, Plus, User, LogOut, Sparkles, Zap, Crown } from "lucide-react";
+import { BookOpen, CheckCircle, Users, TrendingUp, Save, Download, AlertTriangle, Lightbulb, Mail, FileEdit, BarChart3, PenTool, MessageCircle, ArrowLeft, Globe, Folder, LogOut, Sparkles, Zap, Crown } from "lucide-react";
 // import SampleContentGenerator from './components/SampleContentGenerator';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
@@ -36,8 +36,6 @@ function App() {
     // isGeneratingGoalFeedback,
     setGoalBasedFeedback,
     setIsGeneratingGoalFeedback,
-    aiWritingSuggestions,
-    isGeneratingAISuggestions,
     setAIWritingSuggestions,
     setIsGeneratingAISuggestions,
     userProfile,

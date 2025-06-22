@@ -238,7 +238,7 @@ EVERY suggestion must include both languages.`;
     return basePrompt;
   }
 
-  private createOptimizedPrompt(text: string, userLevel: string, nativeLanguage?: string): string {
+  private createOptimizedPrompt(text: string, _userLevel: string, nativeLanguage?: string): string {
     const bilingualInstruction = nativeLanguage && nativeLanguage.toLowerCase() !== 'english' 
       ? `\n\n🌍 CRITICAL BILINGUAL REQUIREMENT: The student's native language is ${nativeLanguage}. For EVERY SINGLE suggestion, you MUST provide the "message" field with explanations in BOTH English AND ${nativeLanguage}, separated by " | ". This is mandatory for ESL learning.
 
@@ -459,13 +459,13 @@ Analyze the text above and find EVERY error. Check each word individually.`;
     const capitalizationPatterns = [
       { 
         pattern: /([.!?]\s+)\b([a-z])/g, 
-        correction: (match: string, punctuation: string, letter: string) => punctuation + letter.toUpperCase(),
+        correction: (_match: string, punctuation: string, letter: string) => punctuation + letter.toUpperCase(),
         message: 'First letter after period must be capitalized'
       },
       // Start of text should be capitalized (only word boundaries)
       { 
         pattern: /^(\s*)\b([a-z])/,
-        correction: (match: string, spaces: string, letter: string) => spaces + letter.toUpperCase(),
+        correction: (_match: string, spaces: string, letter: string) => spaces + letter.toUpperCase(),
         message: 'First letter of text must be capitalized'
       }
     ];
@@ -630,7 +630,7 @@ Analyze the text above and find EVERY error. Check each word individually.`;
   }
 
   // Fast analysis with simpler prompt for timeout recovery
-  private async getFastAnalysis(text: string, userLevel: string, nativeLanguage?: string): Promise<WritingAnalysis> {
+  private async getFastAnalysis(text: string, _userLevel: string, nativeLanguage?: string): Promise<WritingAnalysis> {
     if (!this.isInitialized || !this.openai) {
       return this.getMockAnalysis(text, nativeLanguage);
     }

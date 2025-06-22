@@ -215,7 +215,7 @@ export class EnhancedAiService {
   }
 
   // Generate vocabulary enhancement suggestions - now powered by OpenAI
-  private getVocabularySuggestions(text: string): Suggestion[] {
+  private getVocabularySuggestions(_text: string): Suggestion[] {
     // Remove hardcoded patterns - let OpenAI handle all vocabulary suggestions
     console.log('📚 Vocabulary suggestions now handled entirely by OpenAI GPT-4o for intelligent context-aware improvements');
     return []; // OpenAI will provide all vocabulary suggestions
@@ -273,23 +273,7 @@ export class EnhancedAiService {
     return suggestions;
   }
 
-  // Merge suggestions avoiding duplicates
-  private mergeSuggestions(openaiSuggestions: Suggestion[], quickSuggestions: Suggestion[]): Suggestion[] {
-    const merged = [...openaiSuggestions];
-    
-    quickSuggestions.forEach(quickSugg => {
-      const overlap = merged.find(existing => 
-        Math.abs(existing.position.start - quickSugg.position.start) < 5 &&
-        existing.originalText.toLowerCase() === quickSugg.originalText.toLowerCase()
-      );
-      
-      if (!overlap) {
-        merged.push(quickSugg);
-      }
-    });
-    
-    return merged.sort((a, b) => a.position.start - b.position.start);
-  }
+
 
   private shouldUseCachedResult(text: string): boolean {
     if (!this.lastAnalysis || !this.lastText) return false;

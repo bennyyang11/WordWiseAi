@@ -9,9 +9,9 @@ import { debounce } from '../utils/debounce';
 // import SuggestionsPanel from './SuggestionsPanel';
 import ErrorHeatmap from './ErrorHeatmap';
 import { Check, X, BookOpen, Users, Lightbulb, BookOpenText } from 'lucide-react';
-import type { Suggestion } from '../types';
-import { translationService, SUPPORTED_LANGUAGES } from '../services/translationService';
-import { vocabularyEnhancementService, type VocabularySuggestion } from '../services/vocabularyEnhancementService';
+
+import { vocabularyEnhancementService } from '../services/vocabularyEnhancementService';
+import { SUPPORTED_LANGUAGES } from '../services/translationService';
 import toast from 'react-hot-toast';
 
 // Deduplication function to handle suggestions from multiple services targeting the same word
@@ -383,18 +383,7 @@ const TextEditor: React.FC = () => {
     setShowErrorHeatmap(true);
   }, [setErrorHeatmapData, setShowErrorHeatmap]);
 
-  // Analyze suggestions for error patterns
-  const analyzeErrorPatterns = useCallback((suggestions: Suggestion[]) => {
-    if (suggestions.length > 0) {
-      console.log('📊 Analyzing error patterns from', suggestions.length, 'suggestions...');
-      errorPatternService.analyzeErrorPatterns(suggestions);
-    }
-    
-    // Also record successful usage for content without errors
-    if (suggestions.length === 0 && currentDocument?.content) {
-      errorPatternService.recordSuccessfulUsage(currentDocument.content);
-    }
-  }, [currentDocument]);
+
 
   // Debounced vocabulary analysis
   const debouncedVocabularyAnalysis = useCallback(

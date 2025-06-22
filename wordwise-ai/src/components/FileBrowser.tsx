@@ -14,7 +14,6 @@ import {
   BarChart3,
   PenTool,
   MessageCircle,
-  Calendar,
   TrendingUp
 } from "lucide-react";
 import { fileManagementService } from '../services/fileManagementService';

@@ -193,7 +193,6 @@ const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ data, onClose }) => {
               <button
                 onClick={() => {
                   errorPatternService.addDemoData();
-                  const newData = errorPatternService.getErrorHeatmapData();
                   window.location.reload(); // Simple way to refresh the component with new data
                 }}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
