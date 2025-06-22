@@ -37,21 +37,50 @@ class AuthService {
   }
 
   private initializeAuthListener() {
-    onAuthStateChanged(auth, async (user) => {
-      this.currentAuthState = {
-        user,
-        loading: false,
-        error: null
-      };
-      this.notifyCallbacks();
-    }, (error) => {
-      this.currentAuthState = {
-        user: null,
-        loading: false,
-        error: error.message
-      };
-      this.notifyCallbacks();
+    console.log('🔐 Initializing auth state listener...');
+    
+    const unsubscribe = onAuthStateChanged(auth, 
+      async (user) => {
+        console.log('👤 Auth state changed:', user ? `User: ${user.uid}` : 'No user');
+        this.currentAuthState = {
+          user,
+          loading: false,
+          error: null
+        };
+        this.notifyCallbacks();
+      }, 
+      (error) => {
+        console.error('🚨 Auth state error:', error);
+        
+        // Handle specific error types
+        if (error.message.includes('400') || error.message.includes('Bad Request')) {
+          console.error('🚨 400 Bad Request error detected in auth listener');
+          console.error('📋 This might be due to:');
+          console.error('   - Invalid Firebase configuration');
+          console.error('   - Network connectivity issues');
+          console.error('   - CORS policy restrictions');
+          console.error('   - Firebase project not properly set up');
+        }
+        
+        this.currentAuthState = {
+          user: null,
+          loading: false,
+          error: error.message
+        };
+        this.notifyCallbacks();
+      }
+    );
+
+    // Monitor connection status
+    window.addEventListener('online', () => {
+      console.log('🌐 Network connection restored');
     });
+
+    window.addEventListener('offline', () => {
+      console.log('🌐 Network connection lost');
+    });
+
+    return unsubscribe;
   }
 
   private notifyCallbacks() {

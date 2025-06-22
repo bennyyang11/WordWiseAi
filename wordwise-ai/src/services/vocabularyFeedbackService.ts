@@ -54,7 +54,7 @@ class VocabularyFeedbackService {
           'Authorization': `Bearer ${this.apiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o',
           messages: [
             {
               role: 'system',
@@ -88,8 +88,28 @@ CRITICAL INSTRUCTIONS:
         throw new Error('No content received from OpenAI');
       }
 
+      // Clean and extract JSON from the response
+      console.log('📝 Raw vocabulary response:', content.substring(0, 200) + '...');
+      
+      // Remove markdown code blocks and backticks
+      let cleanContent = content.trim();
+      
+      // Remove markdown code blocks
+      cleanContent = cleanContent.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
+      
+      // Remove backticks
+      cleanContent = cleanContent.replace(/`/g, '"');
+      
+      // Extract JSON from the cleaned content
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+      
+      console.log('🧹 Cleaned JSON:', jsonMatch[0].substring(0, 200) + '...');
+      
       // Parse the JSON response
-      const feedback = JSON.parse(content.trim());
+      const feedback = JSON.parse(jsonMatch[0]);
       return this.validateAndFormatFeedback(feedback, text);
 
     } catch (error) {

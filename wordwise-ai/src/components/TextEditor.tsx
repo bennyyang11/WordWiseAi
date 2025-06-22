@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { useWritingStore } from '../store/writingStore';
 import { enhancedAiService } from '../services/enhancedAiService';
+import { openaiService } from '../services/openaiService';
 import { vocabularyFeedbackService } from '../services/vocabularyFeedbackService';
 import { checkPlagiarism } from '../services/plagiarismService';
 import { errorPatternService } from '../services/errorPatternService';
@@ -9,6 +10,55 @@ import { debounce } from '../utils/debounce';
 import ErrorHeatmap from './ErrorHeatmap';
 import { Check, X, BookOpen, Users, Lightbulb, BookOpenText } from 'lucide-react';
 import type { Suggestion } from '../types';
+import { translationService, SUPPORTED_LANGUAGES } from '../services/translationService';
+import { vocabularyEnhancementService, type VocabularySuggestion } from '../services/vocabularyEnhancementService';
+import toast from 'react-hot-toast';
+
+// Deduplication function to handle suggestions from multiple services targeting the same word
+const deduplicateTextEditorSuggestions = (suggestions: any[]): any[] => {
+  const deduplicated: any[] = [];
+  const seen = new Set<string>();
+  
+  // Sort suggestions by priority: spelling/grammar first, then vocabulary
+  const prioritizedSuggestions = [...suggestions].sort((a, b) => {
+    // Prioritize spelling/grammar over vocabulary
+    if ((a.type === 'spelling' || a.type === 'grammar') && a.type !== b.type) return -1;
+    if ((b.type === 'spelling' || b.type === 'grammar') && a.type !== b.type) return 1;
+    // Then sort by position
+    return a.position.start - b.position.start;
+  });
+  
+  for (const suggestion of prioritizedSuggestions) {
+    // Create a key based on text position to identify overlapping suggestions
+    const positionKey = `${suggestion.position.start}-${suggestion.position.end}`;
+    
+    if (!seen.has(positionKey)) {
+      // Check if this suggestion overlaps with any existing suggestion
+      const hasOverlap = deduplicated.some(existing => 
+        positionsOverlap(
+          { start: suggestion.position.start, end: suggestion.position.end },
+          { start: existing.position.start, end: existing.position.end }
+        )
+      );
+      
+      if (!hasOverlap) {
+        deduplicated.push(suggestion);
+        seen.add(positionKey);
+        console.log('✅ Keeping suggestion:', suggestion.type, suggestion.originalText);
+      } else {
+        console.log('🔄 Removing overlapping suggestion:', suggestion.type, suggestion.originalText);
+      }
+    } else {
+      console.log('🔄 Removing duplicate suggestion:', suggestion.type, suggestion.originalText);
+    }
+  }
+  
+  return deduplicated;
+};
+
+const positionsOverlap = (pos1: { start: number; end: number }, pos2: { start: number; end: number }): boolean => {
+  return pos1.start < pos2.end && pos2.start < pos1.end;
+};
 
 const TextEditor: React.FC = () => {
   const { 
@@ -20,6 +70,7 @@ const TextEditor: React.FC = () => {
     setIsAnalyzing,
     // setAnalysisResult,
     applySuggestion: storeApplySuggestion,
+    applyAllSuggestions,
     dismissSuggestion: _storeDismissSuggestion,
     userProfile,
     setCurrentDocument,
@@ -76,6 +127,35 @@ const TextEditor: React.FC = () => {
     }
   }, [userProfile, currentDocument, setCurrentDocument]);
 
+  // Initialize temporary user profile for testing AI analysis if none exists
+  useEffect(() => {
+    if (!userProfile) {
+      console.log('🔧 No user profile found, creating temporary profile for AI analysis testing...');
+      const tempProfile = {
+        id: 'temp-user',
+        name: 'Test User',
+        email: 'test@example.com',
+        nativeLanguage: 'English',
+        englishLevel: 'intermediate' as const,
+        writingGoals: {
+          type: 'academic' as const,
+          targetWordCount: 500,
+          targetAudience: 'professor' as const,
+          formalityLevel: 'formal' as const,
+          essayType: 'argumentative' as const,
+        },
+        preferences: {
+          showExplanations: true,
+          highlightComplexWords: true,
+          suggestSimplifications: true,
+          realTimeAnalysis: true, // This is crucial for AI analysis to work
+        }
+      };
+      setUserProfile(tempProfile);
+      console.log('✅ Temporary user profile created with realTimeAnalysis enabled');
+    }
+  }, [userProfile, setUserProfile]);
+
   // Set initial content of contentEditable when component mounts
   useEffect(() => {
     if (textAreaRef.current && currentDocument?.content !== undefined) {
@@ -112,43 +192,123 @@ const TextEditor: React.FC = () => {
 
 
 
-  // Manual analysis function for immediate execution
+  // Manual analysis function for immediate execution with AI-powered spell/grammar + vocabulary checking
   const performAnalysis = useCallback(async (text: string) => {
     if (text.trim().length > 10) {
-      console.log('🚀 Starting enhanced AI analysis for:', text.substring(0, 50) + '...');
+      console.log('🚀 Starting comprehensive AI analysis (grammar + vocabulary) for:', text.substring(0, 50) + '...');
       setIsAnalyzing(true);
       try {
-        const result = await enhancedAiService.analyzeText(text, userProfile || undefined);
-        console.log('✅ Enhanced analysis result:', result);
-        setSuggestions(result.suggestions);
+        if (!userProfile) {
+          console.warn('⚠️ No user profile available for analysis');
+          setIsAnalyzing(false);
+          return;
+        }
+
+        // Run both grammar/spelling AND vocabulary analysis in parallel for faster results
+        console.log('🌍 Using language for analysis:', userProfile?.nativeLanguage || 'English (default)');
         
-        // Analyze error patterns from suggestions
-        analyzeErrorPatterns(result.suggestions);
+        const [grammarResult, vocabularyResult] = await Promise.all([
+          // Grammar and spelling analysis
+          openaiService.analyzeText(
+            text, 
+            userProfile?.englishLevel || 'intermediate',
+            userProfile?.nativeLanguage
+          ),
+          // Vocabulary enhancement analysis
+          vocabularyEnhancementService.analyzeVocabulary(text, userProfile)
+        ]);
+        
+        console.log('✅ Grammar analysis result:', grammarResult.grammarSuggestions.length, 'suggestions');
+        console.log('✅ Vocabulary analysis result:', vocabularyResult.length, 'suggestions');
+        
+        // Convert grammar suggestions to our app format
+        const convertedGrammarResult = openaiService.convertToAppFormat(grammarResult, text);
+        
+        // Convert vocabulary suggestions to our app format
+        const vocabularySuggestions = vocabularyResult.map(vocabSugg => ({
+          id: vocabSugg.id,
+          type: vocabSugg.type,
+          severity: vocabSugg.severity,
+          originalText: vocabSugg.originalText,
+          suggestedText: vocabSugg.suggestedText,
+          explanation: vocabSugg.explanation,
+          position: vocabSugg.position,
+          confidence: vocabSugg.confidence
+        }));
+        
+        // Combine grammar and vocabulary suggestions
+        const allSuggestions = [
+          ...convertedGrammarResult.suggestions,
+          ...vocabularySuggestions
+        ];
+        
+        // Deduplicate suggestions - prioritize spelling/grammar over vocabulary for same word
+        const deduplicatedSuggestions = deduplicateTextEditorSuggestions(allSuggestions);
+        
+        // Sort by position in text for proper highlighting  
+        deduplicatedSuggestions.sort((a: any, b: any) => a.position.start - b.position.start);
+        
+        setSuggestions(deduplicatedSuggestions);
+        
+        console.log('🎯 Final suggestions after deduplication:', deduplicatedSuggestions.length,
+          `(from ${allSuggestions.length} original: ${convertedGrammarResult.suggestions.length} grammar/spelling, ${vocabularySuggestions.length} vocabulary)`);
+        
+        // Analyze error patterns from grammar suggestions only (for heatmap)
+        if (convertedGrammarResult.suggestions.length > 0) {
+          setTimeout(() => errorPatternService.analyzeErrorPatterns(convertedGrammarResult.suggestions), 0);
+        }
       } catch (error) {
-        console.error('❌ Enhanced analysis failed:', error);
+        console.error('❌ Comprehensive AI analysis failed:', error);
+        // Fallback to enhanced service if OpenAI fails
+        try {
+          const fallbackResult = await enhancedAiService.analyzeText(text, userProfile || undefined);
+          console.log('✅ Fallback analysis result:', fallbackResult);
+          setSuggestions(fallbackResult.suggestions);
+          if (fallbackResult.suggestions.length > 0) {
+            setTimeout(() => errorPatternService.analyzeErrorPatterns(fallbackResult.suggestions), 0);
+          }
+        } catch (fallbackError) {
+          console.error('❌ Fallback analysis also failed:', fallbackError);
+        }
       } finally {
         setIsAnalyzing(false);
       }
     }
   }, [userProfile, setSuggestions, setIsAnalyzing]);
 
-  // Accept all suggestions at once
+  // Accept all suggestions at once (should ONLY be called by the Accept All button)
   const acceptAllSuggestions = useCallback(() => {
-    console.log('📝 Accepting all', suggestions.length, 'suggestions');
+    const suggestionCount = suggestions.length;
+    console.log('📝 ACCEPT ALL LOCAL FUNCTION - Accepting all', suggestionCount, 'suggestions');
+    console.log('🔍 Store applyAllSuggestions function:', typeof applyAllSuggestions);
     
-    // Apply suggestions in reverse order to maintain position accuracy
-    const sortedSuggestions = [...suggestions].sort((a, b) => b.position.start - a.position.start);
+    if (suggestionCount === 0) {
+      console.log('❌ No suggestions to apply');
+      alert('No suggestions to apply!');
+      return;
+    }
     
-    sortedSuggestions.forEach((suggestion) => {
-      storeApplySuggestion(suggestion.id);
-    });
-    
-    // Hide tooltip
-    setActiveSuggestion(null);
-    setTooltipPosition(null);
-    
-    console.log('✅ All suggestions accepted');
-  }, [suggestions, storeApplySuggestion]);
+    try {
+      console.log('🚀 Calling store applyAllSuggestions...');
+      
+      // Use the store's optimized method for applying all suggestions
+      applyAllSuggestions();
+      
+      console.log('✅ Store applyAllSuggestions called successfully');
+      
+      // Hide tooltip
+      setActiveSuggestion(null);
+      setTooltipPosition(null);
+      
+      // Show success message
+      alert(`✅ Applied ${suggestionCount} suggestion${suggestionCount > 1 ? 's' : ''}!`);
+      
+      console.log('✅ All suggestions accepted');
+    } catch (error) {
+      console.error('❌ Error in acceptAllSuggestions:', error);
+      alert(`❌ Error applying suggestions: ${error}`);
+    }
+  }, [applyAllSuggestions, suggestions.length]);
 
   // Generate vocabulary feedback
   const generateVocabularyFeedback = useCallback(async (text: string) => {
@@ -173,20 +333,42 @@ const TextEditor: React.FC = () => {
   // Plagiarism check function
   const handlePlagiarismCheck = useCallback(async () => {
     if (!currentDocument?.content || currentDocument.content.trim().length < 50) {
-      alert('Please write at least 50 characters to perform a plagiarism check.');
+      toast.error('Please write at least 50 characters to perform a plagiarism check.');
       return;
     }
 
     console.log('🔍 Starting plagiarism check...');
+    console.log('📝 Content length:', currentDocument.content.length);
+    console.log('🔧 API Key available:', !!import.meta.env.VITE_OPENAI_API_KEY && import.meta.env.VITE_OPENAI_API_KEY !== 'your_openai_api_key_here');
+    
     setIsCheckingPlagiarism(true);
     try {
       const report = await checkPlagiarism(currentDocument.content);
       console.log('✅ Plagiarism check completed:', report);
       setPlagiarismReport(report);
       setShowPlagiarismModal(true);
+      
+      if (report.totalMatches === 0) {
+        toast.success('✅ No plagiarism detected!');
+      } else {
+        toast('⚠️ ' + `${report.totalMatches} potential match${report.totalMatches === 1 ? '' : 'es'} found`, {
+          icon: '⚠️',
+          duration: 4000,
+        });
+      }
     } catch (error) {
       console.error('❌ Plagiarism check failed:', error);
-      alert('Plagiarism check failed. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('🔍 Error details:', errorMessage);
+      
+      // Better error messaging
+      if (errorMessage.includes('API key')) {
+        toast.error('❌ OpenAI API key is missing or invalid. Please check your environment variables.');
+      } else if (errorMessage.includes('network')) {
+        toast.error('❌ Network error. Please check your internet connection.');
+      } else {
+        toast.error('❌ Plagiarism check failed. Please try again or check the console for details.');
+      }
     } finally {
       setIsCheckingPlagiarism(false);
     }
@@ -234,20 +416,92 @@ const TextEditor: React.FC = () => {
     }
   }, [userProfile, currentDocument?.content, generateVocabularyFeedback]);
 
-  // Real-time debounced analysis using enhanced AI service
+  // Real-time debounced analysis using AI-powered spell/grammar checking
   const debouncedAnalyze = useCallback(
     (text: string) => {
+      console.log('🔍 debouncedAnalyze called with:', {
+        textLength: text.trim().length,
+        hasUserProfile: !!userProfile,
+        realTimeAnalysis: userProfile?.preferences.realTimeAnalysis,
+        englishLevel: userProfile?.englishLevel,
+        nativeLanguage: userProfile?.nativeLanguage
+      });
+      
       if (userProfile?.preferences.realTimeAnalysis && text.trim().length > 5) {
-        console.log('🔍 Starting real-time enhanced AI analysis...');
-        enhancedAiService.analyzeTextDebounced(text, userProfile, (result) => {
-          console.log('⚡ Real-time analysis complete:', result.suggestions.length, 'suggestions');
-          setSuggestions(result.suggestions);
-          setIsAnalyzing(false);
-          
-          // Analyze error patterns from real-time suggestions
-          analyzeErrorPatterns(result.suggestions);
-        }, 800);
+        console.log('🚀 Starting real-time AI-powered spell/grammar analysis...');
+        console.log('🌍 Real-time analysis using language:', userProfile?.nativeLanguage || 'English (default)');
         setIsAnalyzing(true);
+        
+        // Use OpenAI service for real-time analysis with shorter debouncing (grammar + vocabulary)
+        openaiService.analyzeTextDebounced(
+          text, 
+          userProfile?.englishLevel || 'intermediate',
+          async (analysisResult) => {
+            console.log('⚡ Real-time grammar analysis complete:', analysisResult.grammarSuggestions.length, 'suggestions');
+            
+            // Also run vocabulary analysis for real-time feedback
+            try {
+              const vocabularyResult = await vocabularyEnhancementService.analyzeVocabulary(text, userProfile);
+              console.log('⚡ Real-time vocabulary analysis complete:', vocabularyResult.length, 'suggestions');
+              
+              // Convert grammar suggestions to our app format
+              const convertedGrammarResult = openaiService.convertToAppFormat(analysisResult, text);
+              
+              // Convert vocabulary suggestions to our app format
+              const vocabularySuggestions = vocabularyResult.map(vocabSugg => ({
+                id: vocabSugg.id,
+                type: vocabSugg.type,
+                severity: vocabSugg.severity,
+                originalText: vocabSugg.originalText,
+                suggestedText: vocabSugg.suggestedText,
+                explanation: vocabSugg.explanation,
+                position: vocabSugg.position,
+                confidence: vocabSugg.confidence
+              }));
+              
+              // Combine grammar and vocabulary suggestions
+              const allSuggestions = [
+                ...convertedGrammarResult.suggestions,
+                ...vocabularySuggestions
+              ];
+              
+              // Deduplicate suggestions - prioritize spelling/grammar over vocabulary for same word
+              const deduplicatedSuggestions = deduplicateTextEditorSuggestions(allSuggestions);
+              
+              // Sort by position in text
+              deduplicatedSuggestions.sort((a: any, b: any) => a.position.start - b.position.start);
+              
+              setSuggestions(deduplicatedSuggestions);
+              
+              console.log('⚡ Real-time suggestions after deduplication:', deduplicatedSuggestions.length,
+                `(from ${allSuggestions.length} original: ${convertedGrammarResult.suggestions.length} grammar, ${vocabularySuggestions.length} vocabulary)`);
+              
+              // Analyze error patterns from grammar suggestions only (for heatmap)
+              if (convertedGrammarResult.suggestions.length > 0) {
+                setTimeout(() => errorPatternService.analyzeErrorPatterns(convertedGrammarResult.suggestions), 0);
+              }
+            } catch (vocabError) {
+              console.warn('⚠️ Real-time vocabulary analysis failed, using grammar only:', vocabError);
+              // Fallback to grammar-only suggestions
+              const convertedResult = openaiService.convertToAppFormat(analysisResult, text);
+              setSuggestions(convertedResult.suggestions);
+              
+              if (convertedResult.suggestions.length > 0) {
+                setTimeout(() => errorPatternService.analyzeErrorPatterns(convertedResult.suggestions), 0);
+              }
+            }
+            
+            setIsAnalyzing(false);
+          }, 
+          1200, // Increased debounce to give user more time to finish typing
+          userProfile?.nativeLanguage
+        );
+      } else {
+        console.log('❌ Analysis skipped - Requirements not met:', {
+          realTimeAnalysis: userProfile?.preferences.realTimeAnalysis,
+          textLength: text.trim().length,
+          hasUserProfile: !!userProfile
+        });
       }
     },
     [userProfile, setSuggestions, setIsAnalyzing]
@@ -438,24 +692,27 @@ const TextEditor: React.FC = () => {
     }
   }, [activeSuggestion]);
 
-  // Accept a suggestion
+  // Accept a single suggestion (ensure it only accepts ONE)
   const acceptSuggestion = useCallback((suggestion: any) => {
-    if (!currentDocument) return;
+    console.log('🎯 ACCEPTING INDIVIDUAL SUGGESTION ONLY:', {
+      id: suggestion.id,
+      original: suggestion.originalText,
+      suggested: suggestion.suggestedText,
+      totalSuggestions: suggestions.length
+    });
     
-    const content = currentDocument.content;
-    const newContent = content.substring(0, suggestion.position.start) + 
-                      suggestion.suggestedText + 
-                      content.substring(suggestion.position.end);
-    
-    updateDocumentContent(newContent);
-    
-    // Remove the accepted suggestion
-    setSuggestions(suggestions.filter(s => s.id !== suggestion.id));
+    // Make sure we're only applying ONE suggestion by ID
+    if (suggestion?.id) {
+      storeApplySuggestion(suggestion.id);
+      console.log('✅ Applied suggestion with ID:', suggestion.id);
+    } else {
+      console.error('❌ No suggestion ID found!', suggestion);
+    }
     
     // Close tooltip
     setActiveSuggestion(null);
     setTooltipPosition(null);
-  }, [currentDocument, suggestions, updateDocumentContent, setSuggestions]);
+  }, [storeApplySuggestion, suggestions.length]);
 
   // Dismiss a suggestion
   const dismissSuggestion = useCallback((suggestion: any) => {
@@ -523,15 +780,19 @@ const TextEditor: React.FC = () => {
       result += content.substring(lastIndex, suggestion.position.start);
       
       // Add the highlighted suggestion with a data attribute for click handling
-      const errorClass = suggestion.type === 'grammar' || suggestion.type === 'spelling' 
-        ? 'error-grammar' 
-        : suggestion.type === 'vocabulary'
-        ? 'error-vocabulary'
-        : suggestion.type === 'style'
-        ? 'error-style'
-        : 'error-grammar';
+      // Make sure spelling and grammar errors get red highlighting
+      let errorClass;
+      if (suggestion.type === 'grammar' || suggestion.type === 'spelling') {
+        errorClass = 'error-spelling'; // Use error-spelling class for both spelling and grammar to ensure red color
+      } else if (suggestion.type === 'vocabulary') {
+        errorClass = 'error-vocabulary';
+      } else if (suggestion.type === 'style') {
+        errorClass = 'error-style';
+      } else {
+        errorClass = 'error-spelling'; // Default to red for any other error types
+      }
       
-      result += `<mark class="${errorClass}" data-suggestion-id="${suggestion.id}">${suggestion.originalText}</mark>`;
+      result += `<mark class="${errorClass}" data-suggestion-id="${suggestion.id}" style="cursor: pointer;">${suggestion.originalText}</mark>`;
       
       lastIndex = suggestion.position.end;
     });
@@ -550,13 +811,38 @@ const TextEditor: React.FC = () => {
         const cursorPosition = saveCursorPosition();
         textAreaRef.current.innerHTML = newHTML;
         
+        // Add click handlers to highlighted suggestions
+        const marks = textAreaRef.current.querySelectorAll('mark[data-suggestion-id]');
+        console.log('👆 Adding click handlers to', marks.length, 'highlighted suggestions');
+        marks.forEach((mark) => {
+          const suggestionId = mark.getAttribute('data-suggestion-id');
+          const suggestion = suggestions.find(s => s.id === suggestionId);
+          if (suggestion) {
+            // Remove any existing click handlers first
+            mark.replaceWith(mark.cloneNode(true));
+            const newMark = textAreaRef.current!.querySelector(`mark[data-suggestion-id="${suggestionId}"]`);
+            if (newMark) {
+              newMark.addEventListener('click', (e) => {
+                console.log('🎯 CLICKED ON INDIVIDUAL SUGGESTION:', {
+                  id: suggestion.id,
+                  original: suggestion.originalText,
+                  suggested: suggestion.suggestedText
+                });
+                e.preventDefault();
+                e.stopPropagation();
+                handleSuggestionClick(suggestion, e as any);
+              });
+            }
+          }
+        });
+        
         // Restore cursor position after updating content
         requestAnimationFrame(() => {
           restoreCursorPosition(cursorPosition);
         });
       }
     }
-  }, [suggestions, generateHighlightedContent, saveCursorPosition, restoreCursorPosition]);
+  }, [suggestions, generateHighlightedContent, saveCursorPosition, restoreCursorPosition, handleSuggestionClick]);
 
   // Suggestion Tooltip Component
   const SuggestionTooltip = () => {
@@ -601,7 +887,26 @@ const TextEditor: React.FC = () => {
               {activeSuggestion.severity}
             </span>
           </div>
-          <p className="text-sm text-gray-700">{activeSuggestion.explanation}</p>
+          <div className="text-sm text-gray-700">
+            {activeSuggestion.explanation.includes('|') && userProfile?.nativeLanguage && userProfile.nativeLanguage !== 'English' ? (
+              <div className="space-y-2">
+                {/* English explanation */}
+                <div className="bg-gray-50 p-2 rounded">
+                  <div className="text-xs font-medium text-gray-600 mb-1">🇺🇸 English:</div>
+                  <div className="text-sm">{activeSuggestion.explanation.split('|')[0].trim()}</div>
+                </div>
+                {/* Native language explanation */}
+                <div className="bg-blue-50 p-2 rounded">
+                  <div className="text-xs font-medium text-blue-600 mb-1">
+                    {SUPPORTED_LANGUAGES.find(lang => lang.name === userProfile.nativeLanguage)?.flag || '🌍'} {userProfile.nativeLanguage}:
+                  </div>
+                  <div className="text-sm">{activeSuggestion.explanation.split('|')[1]?.trim()}</div>
+                </div>
+              </div>
+            ) : (
+              <p>{activeSuggestion.explanation}</p>
+            )}
+          </div>
         </div>
 
         {/* Original vs Suggested */}
@@ -621,14 +926,20 @@ const TextEditor: React.FC = () => {
         {/* Action buttons */}
         <div className="flex space-x-2">
           <button
-            onClick={() => acceptSuggestion(activeSuggestion)}
+            onClick={() => {
+              console.log('🎯 TOOLTIP ACCEPT BUTTON CLICKED for suggestion:', activeSuggestion?.id);
+              acceptSuggestion(activeSuggestion);
+            }}
             className="flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
           >
             <Check className="h-3 w-3" />
             <span>Accept</span>
           </button>
           <button
-            onClick={() => dismissSuggestion(activeSuggestion)}
+            onClick={() => {
+              console.log('🗑️ TOOLTIP DISMISS BUTTON CLICKED for suggestion:', activeSuggestion?.id);
+              dismissSuggestion(activeSuggestion);
+            }}
             className="flex items-center space-x-1 px-3 py-1.5 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
           >
             <X className="h-3 w-3" />
@@ -662,21 +973,36 @@ const TextEditor: React.FC = () => {
             <span className="mr-2">💡</span>
             Writing Suggestions ({suggestions.length})
           </h3>
-          {suggestions.length > 1 && (
-            <button
-              onClick={acceptAllSuggestions}
-              className="flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
-            >
-              <Check className="h-3 w-3" />
-              <span>Accept All</span>
-            </button>
-          )}
         </div>
         
         {suggestions.length === 0 ? (
           <p className="text-gray-500 text-sm">No errors found. Your writing looks great!</p>
         ) : (
           <div className="space-y-2 max-h-48 overflow-y-auto">
+            {/* Accept All Button - Show for 1+ suggestions for easier testing */}
+            {suggestions.length > 0 && (
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <button
+                  onClick={() => {
+                    console.log('🚀 ACCEPT ALL BUTTON CLICKED!');
+                    console.log('📊 Current suggestions:', suggestions.length);
+                    console.log('📝 Suggestions data:', suggestions.map(s => ({ id: s.id, original: s.originalText, suggested: s.suggestedText })));
+                    
+                    try {
+                      acceptAllSuggestions();
+                      console.log('✅ acceptAllSuggestions function called successfully');
+                    } catch (error) {
+                      console.error('❌ Error calling acceptAllSuggestions:', error);
+                    }
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white hover:bg-green-700 w-full justify-center"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>Accept All {suggestions.length} Suggestion{suggestions.length > 1 ? 's' : ''}</span>
+                </button>
+              </div>
+            )}
+            
             {suggestions.map((suggestion, index) => (
               <div key={suggestion.id || index} className="border rounded-lg p-2 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start mb-1">
@@ -695,7 +1021,25 @@ const TextEditor: React.FC = () => {
                 </div>
                 
                 <div className="text-xs text-gray-700 mb-2">
-                  <strong>Explanation:</strong> {suggestion.explanation}
+                  <strong>Explanation:</strong>
+                  {suggestion.explanation.includes('|') && userProfile?.nativeLanguage && userProfile.nativeLanguage !== 'English' ? (
+                    <div className="mt-1 space-y-2">
+                      {/* English explanation */}
+                      <div className="bg-gray-50 p-2 rounded">
+                        <div className="text-xs font-medium text-gray-600 mb-1">🇺🇸 English:</div>
+                        <div>{suggestion.explanation.split('|')[0].trim()}</div>
+                      </div>
+                      {/* Native language explanation */}
+                      <div className="bg-blue-50 p-2 rounded">
+                        <div className="text-xs font-medium text-blue-600 mb-1">
+                          {SUPPORTED_LANGUAGES.find(lang => lang.name === userProfile.nativeLanguage)?.flag || '🌍'} {userProfile.nativeLanguage}:
+                        </div>
+                        <div>{suggestion.explanation.split('|')[1]?.trim()}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <span> {suggestion.explanation}</span>
+                  )}
                 </div>
                 
                 <div className="flex space-x-2">
@@ -729,11 +1073,23 @@ const TextEditor: React.FC = () => {
             {isGeneratingGoalFeedback && (
               <div className="ml-2 animate-spin rounded-full h-3 w-3 border-b-2 border-orange-500"></div>
             )}
+            {/* Current language indicator */}
+            {userProfile?.nativeLanguage && userProfile.nativeLanguage !== 'English' && (
+              <div className="ml-auto flex items-center text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                <span className="mr-1">
+                  🇺🇸 + {SUPPORTED_LANGUAGES.find(lang => lang.name === userProfile.nativeLanguage)?.flag || '🌍'}
+                </span>
+                <span>Bilingual Mode</span>
+              </div>
+            )}
           </h3>
           
-          {/* Language Selector */}
+          {/* Language Selector for Bilingual Suggestions */}
           <div className="flex items-center space-x-2">
-            <label className="text-xs font-medium text-gray-700">Language:</label>
+            <label className="text-xs font-medium text-gray-700" title="Choose the second language for bilingual suggestions">
+              <span className="mr-1">🌍</span>
+              Suggestions Language:
+            </label>
             <select
               value={userProfile?.nativeLanguage || 'English'}
               onChange={(e) => {
@@ -745,7 +1101,7 @@ const TextEditor: React.FC = () => {
                   };
                   setUserProfile(updatedProfile);
                   
-                  // Clear existing feedback to show regeneration
+                  // Clear existing feedback to show regeneration with new language
                   setGoalBasedFeedback(null);
                   setAIWritingSuggestions(null);
                   setVocabularyFeedback(null);
@@ -753,29 +1109,35 @@ const TextEditor: React.FC = () => {
                   setIsGeneratingAISuggestions(true);
                   setIsGeneratingVocabularyFeedback(true);
                   
+                  // Clear current suggestions so they regenerate with new language
+                  setSuggestions([]);
+                  
+                  // Regenerate suggestions with new language
+                  if (currentDocument?.content && currentDocument.content.trim().length > 10) {
+                    console.log('🔄 Regenerating suggestions with new language:', newLanguage);
+                    setTimeout(() => {
+                      performAnalysis(currentDocument.content);
+                    }, 200);
+                  }
+                  
                   // Regenerate vocabulary feedback if there's enough text
                   if (currentDocument?.content && currentDocument.content.trim().length > 20) {
-                    setTimeout(() => generateVocabularyFeedback(currentDocument.content), 100);
+                    setTimeout(() => generateVocabularyFeedback(currentDocument.content), 300);
                   }
+                  
+                  // Show a success message
+                  console.log('🌍 Language changed to:', newLanguage === 'English' ? 'English Only' : `English + ${newLanguage}`);
                 }
               }}
-              className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[180px]"
+              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
             >
-              <option value="English">English Only</option>
-              <option value="Spanish">English + Spanish</option>
-              <option value="Chinese">English + Chinese</option>
-              <option value="French">English + French</option>
-              <option value="German">English + German</option>
-              <option value="Italian">English + Italian</option>
-              <option value="Portuguese">English + Portuguese</option>
-              <option value="Russian">English + Russian</option>
-              <option value="Japanese">English + Japanese</option>
-              <option value="Korean">English + Korean</option>
-              <option value="Arabic">English + Arabic</option>
-              <option value="Hindi">English + Hindi</option>
-              <option value="Dutch">English + Dutch</option>
-              <option value="Swedish">English + Swedish</option>
-              <option value="Polish">English + Polish</option>
+              <option value="English">🇺🇸 English Only</option>
+              {SUPPORTED_LANGUAGES.map(lang => (
+                <option key={lang.code} value={lang.name}>
+                  🇺🇸 + {lang.flag} {lang.name} ({lang.nativeName})
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -1083,6 +1445,8 @@ const TextEditor: React.FC = () => {
       }
     }
   };
+
+
 
   // Load static sample content or generate AI content
   const loadSampleContent = async (level: 'beginner' | 'intermediate' | 'advanced' | 'ai-generated') => {

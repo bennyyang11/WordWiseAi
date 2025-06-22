@@ -16,6 +16,7 @@ const EnhancedTextEditor: React.FC = () => {
     // setSelectedSuggestion,
     userProfile,
     setCurrentDocument,
+    applySuggestion,
     // setUserProfile
   } = useWritingStore();
   
@@ -164,6 +165,48 @@ const EnhancedTextEditor: React.FC = () => {
     }
   };
 
+  // Test function to verify vocabulary enhancement system
+  const runVocabularyTest = () => {
+    const testText = `This is very good work with a lot of nice things to help people get better results. The big problem is that many students use simple words and don't show their knowledge properly. We need to make sure they understand how to use more sophisticated vocabulary in their academic writing.`;
+    
+    console.log('🧪 VOCABULARY ENHANCEMENT TEST STARTED');
+    console.log('📝 Test text loaded:', testText);
+    
+    // Clear current content and set test text
+    if (textAreaRef.current) {
+      textAreaRef.current.innerHTML = testText;
+      
+      // Update the document content in the store
+      updateDocumentContent(testText);
+      
+      console.log('🔍 Expected vocabulary suggestions for these words:');
+      console.log('   - "very good" → should suggest "excellent"');
+      console.log('   - "a lot of" → should suggest "numerous"');
+      console.log('   - "nice" → should suggest "pleasant/favorable"');
+      console.log('   - "things" → should suggest "aspects/elements"');
+      console.log('   - "help" → should suggest "assist"');
+      console.log('   - "get" → should suggest "obtain/achieve"');
+      console.log('   - "big problem" → should suggest "significant issue"');
+      console.log('   - "make sure" → should suggest "ensure"');
+      console.log('   - "use" → should suggest "utilize/employ"');
+      console.log('   - "show" → should suggest "demonstrate"');
+      
+      console.log('⏱️ Wait 2-3 seconds for analysis to complete...');
+      console.log('🔵 Look for BLUE underlines on vocabulary words');
+      console.log('🔴 Look for RED underlines on grammar/spelling errors (if any)');
+      console.log('👆 Click on blue underlined words to see AI suggestions');
+      
+      // Check API configuration
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      if (apiKey && apiKey !== 'your_openai_api_key_here') {
+        console.log('✅ OpenAI API key detected - AI-powered suggestions should appear');
+      } else {
+        console.log('⚠️ No OpenAI API key - using fallback vocabulary patterns');
+        console.log('💡 Add your API key to .env file: VITE_OPENAI_API_KEY=your_key_here');
+      }
+    }
+  };
+
   // Handle clicking on highlighted suggestions
   const handleSuggestionClick = useCallback((suggestion: any, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -193,24 +236,27 @@ const EnhancedTextEditor: React.FC = () => {
     setActiveSuggestion(suggestion);
   }, []);
 
-  // Accept a suggestion
+  // Accept a single suggestion (ensure it only accepts ONE)
   const acceptSuggestion = useCallback((suggestion: any) => {
-    if (!currentDocument) return;
+    console.log('🎯 ENHANCED EDITOR - ACCEPTING INDIVIDUAL SUGGESTION ONLY:', {
+      id: suggestion.id,
+      original: suggestion.originalText,
+      suggested: suggestion.suggestedText,
+      totalSuggestions: suggestions.length
+    });
     
-    const content = currentDocument.content;
-    const newContent = content.substring(0, suggestion.position.start) + 
-                      suggestion.suggestedText + 
-                      content.substring(suggestion.position.end);
-    
-    updateDocumentContent(newContent);
-    
-    // Remove the accepted suggestion
-    setSuggestions(suggestions.filter(s => s.id !== suggestion.id));
+    // Make sure we're only applying ONE suggestion by ID
+    if (suggestion?.id) {
+      applySuggestion(suggestion.id);
+      console.log('✅ Applied suggestion with ID:', suggestion.id);
+    } else {
+      console.error('❌ No suggestion ID found!', suggestion);
+    }
     
     // Close tooltip
     setActiveSuggestion(null);
     setTooltipPosition(null);
-  }, [currentDocument, suggestions, updateDocumentContent, setSuggestions]);
+  }, [applySuggestion, suggestions.length]);
 
   // Dismiss a suggestion
   const dismissSuggestion = useCallback((suggestion: any) => {
@@ -219,26 +265,12 @@ const EnhancedTextEditor: React.FC = () => {
     setTooltipPosition(null);
   }, [suggestions, setSuggestions]);
 
-  // Accept all suggestions
+  // Accept all suggestions (if needed in this component)
   // const acceptAllSuggestions = useCallback(() => {
-  //   if (!currentDocument || suggestions.length === 0) return;
-  //   
-  //   let content = currentDocument.content;
-  //   
-  //   // Sort suggestions by position (reverse order to apply from end to start)
-  //   const sortedSuggestions = [...suggestions].sort((a, b) => b.position.start - a.position.start);
-  //   
-  //   sortedSuggestions.forEach(suggestion => {
-  //     content = content.substring(0, suggestion.position.start) + 
-  //               suggestion.suggestedText + 
-  //               content.substring(suggestion.position.end);
-  //   });
-  //   
-  //   updateDocumentContent(content);
-  //   setSuggestions([]);
+  //   applyAllSuggestions();
   //   setActiveSuggestion(null);
   //   setTooltipPosition(null);
-  // }, [currentDocument, suggestions, updateDocumentContent, setSuggestions]);
+  // }, [applyAllSuggestions]);
 
   // Render text with highlights 
   const renderTextWithHighlights = () => {
@@ -671,6 +703,14 @@ const EnhancedTextEditor: React.FC = () => {
           
           {/* Right: Tools */}
           <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => runVocabularyTest()}
+              className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+              disabled={isAnalyzing}
+              title="Test vocabulary enhancement system"
+            >
+              🧪 Test Vocabulary
+            </button>
             <button 
               onClick={() => performAnalysis(currentDocument?.content || '')}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"

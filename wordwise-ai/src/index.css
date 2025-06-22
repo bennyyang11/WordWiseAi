@@ -357,27 +357,34 @@ p, h1, h2, h3, h4, h5, h6 {
   position: relative;
 }
 
-.text-editor-container mark {
-  background: none;
+.text-editor-container mark,
+.suggestion-highlights mark {
   padding: 0;
   border-radius: 2px;
   cursor: pointer;
   transition: all 0.2s ease;
+  color: inherit;
 }
 
-.text-editor-container mark.error-grammar {
-  background: rgba(239, 68, 68, 0.1);
+.text-editor-container mark.error-grammar,
+.suggestion-highlights mark.error-grammar {
+  background: rgba(239, 68, 68, 0.15);
   border-bottom: 2px wavy #ef4444;
+  color: inherit;
 }
 
-.text-editor-container mark.error-spelling {
-  background: rgba(239, 68, 68, 0.1);
+.text-editor-container mark.error-spelling,
+.suggestion-highlights mark.error-spelling {
+  background: rgba(239, 68, 68, 0.15);
   border-bottom: 2px wavy #ef4444;
+  color: inherit;
 }
 
-.text-editor-container mark.error-vocabulary {
-  background: rgba(59, 130, 246, 0.1);
+.text-editor-container mark.error-vocabulary,
+.suggestion-highlights mark.error-vocabulary {
+  background: rgba(59, 130, 246, 0.15);
   border-bottom: 2px wavy #3b82f6;
+  color: inherit;
 }
 
 .text-editor-container mark.error-style {
@@ -391,13 +398,33 @@ p, h1, h2, h3, h4, h5, h6 {
 }
 
 .text-editor-container mark:hover {
-  background-opacity: 0.2;
   transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+.text-editor-container mark.error-grammar:hover,
+.suggestion-highlights mark.error-grammar:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-bottom: 3px wavy #dc2626;
+}
+
+.text-editor-container mark.error-spelling:hover,
+.suggestion-highlights mark.error-spelling:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-bottom: 3px wavy #dc2626;
+}
+
+.text-editor-container mark.error-vocabulary:hover,
+.suggestion-highlights mark.error-vocabulary:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-bottom: 3px wavy #2563eb;
 }
 
 /* Error highlight styles */
 .error-highlight-red {
-  border-bottom: 2px solid rgb(239, 68, 68) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-bottom: 2px wavy #ef4444 !important;
+  color: inherit !important;
   font-family: inherit !important;
   font-size: inherit !important;
   font-weight: inherit !important;
@@ -405,11 +432,14 @@ p, h1, h2, h3, h4, h5, h6 {
 }
 
 .error-highlight-red:hover {
-  border-bottom: 3px solid rgb(239, 68, 68) !important;
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-bottom: 3px wavy #dc2626 !important;
 }
 
 .error-highlight-blue {
-  border-bottom: 2px solid rgb(59, 130, 246) !important;
+  background: rgba(59, 130, 246, 0.15) !important;
+  border-bottom: 2px wavy #3b82f6 !important;
+  color: inherit !important;
   font-family: inherit !important;
   font-size: inherit !important;
   font-weight: inherit !important;
@@ -417,7 +447,8 @@ p, h1, h2, h3, h4, h5, h6 {
 }
 
 .error-highlight-blue:hover {
-  border-bottom: 3px solid rgb(59, 130, 246) !important;
+  background: rgba(59, 130, 246, 0.25) !important;
+  border-bottom: 3px wavy #2563eb !important;
 }
 
 .error-highlight-purple {
@@ -510,6 +541,7 @@ p, h1, h2, h3, h4, h5, h6 {
 .suggestion-highlights mark {
   pointer-events: auto;
   cursor: pointer;
+  color: inherit;
 }
 
 .suggestion-highlights mark:hover {

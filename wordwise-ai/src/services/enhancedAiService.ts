@@ -34,9 +34,9 @@ export class EnhancedAiService {
       const nativeLanguage = userProfile?.nativeLanguage;
       const documentType = this.getDocumentType(); // Get current document type for context
       
-      // Use OpenAI for comprehensive analysis including vocabulary enhancement
+      // Use OpenAI for comprehensive analysis including AI-powered vocabulary enhancement
       const startTime = Date.now();
-      console.log('🔗 Attempting GPT-4o analysis with vocabulary enhancement...');
+      console.log('🔗 Attempting GPT-4o analysis with comprehensive vocabulary enhancement...');
       console.log('🌍 User profile - Level:', userLevel, 'Native Language:', nativeLanguage || 'not specified');
       console.log('📝 Document type:', documentType, '- will provide context-appropriate vocabulary suggestions');
       
@@ -44,17 +44,13 @@ export class EnhancedAiService {
       const openaiTime = Date.now() - startTime;
       
       console.log(`⚡ GPT-4o analysis completed in ${openaiTime}ms with ${openaiAnalysis.grammarSuggestions.length} suggestions`);
-      console.log(`📚 Includes spelling, grammar, AND vocabulary enhancement for ${documentType} writing`);
+      console.log(`📚 AI-powered vocabulary enhancement active for ${documentType} writing`);
       
       // Convert OpenAI format to app format
       const appFormatResult = openaiService.convertToAppFormat(openaiAnalysis, text);
       
-      // Add any quick regex-based suggestions for immediate feedback (mainly for fallback)
-      const quickSuggestions = this.getQuickSuggestions(text);
-      console.log(`🔍 Regex patterns found ${quickSuggestions.length} additional suggestions`);
-      
-      // Combine suggestions, avoiding duplicates - prioritize GPT-4o vocabulary suggestions
-      const allSuggestions = this.mergeSuggestions(appFormatResult.suggestions, quickSuggestions);
+      // Use ONLY OpenAI suggestions - no regex patterns for vocabulary
+      const allSuggestions = appFormatResult.suggestions;
       
       // Count different types of suggestions
       const spellingCount = allSuggestions.filter(s => s.type === 'spelling').length;
@@ -218,43 +214,62 @@ export class EnhancedAiService {
     return suggestions;
   }
 
-  // Generate vocabulary enhancement suggestions - now complementary to GPT-4o
+  // Generate vocabulary enhancement suggestions - now powered by OpenAI
   private getVocabularySuggestions(text: string): Suggestion[] {
+    // Remove hardcoded patterns - let OpenAI handle all vocabulary suggestions
+    console.log('📚 Vocabulary suggestions now handled entirely by OpenAI GPT-4o for intelligent context-aware improvements');
+    return []; // OpenAI will provide all vocabulary suggestions
+  }
+
+  // Fallback vocabulary suggestions when OpenAI is not available
+  private getFallbackVocabularySuggestions(text: string): Suggestion[] {
     const suggestions: Suggestion[] = [];
-    console.log('📚 Analyzing text for basic vocabulary improvements (GPT-4o handles advanced vocabulary)...');
+    console.log('📚 Generating fallback vocabulary suggestions...');
     
-    // Only basic vocabulary improvements as fallback - GPT-4o handles sophisticated enhancements
-    const basicVocabularyMappings = [
-      { simple: /\bvery good\b/gi, advanced: 'excellent', explanation: 'More precise academic vocabulary' },
+    // Basic vocabulary improvements as fallback when OpenAI is not available
+    const vocabularyMappings = [
+      { simple: /\bvery good\b/gi, advanced: 'excellent', explanation: 'Use more precise academic vocabulary' },
       { simple: /\bvery bad\b/gi, advanced: 'poor', explanation: 'More formal academic term' },
       { simple: /\ba lot of\b/gi, advanced: 'numerous', explanation: 'More formal quantifier' },
-      { simple: /\bbig\s+problem\b/gi, advanced: 'significant issue', explanation: 'More formal academic terminology' },
+      { simple: /\bbig\b/gi, advanced: 'significant', explanation: 'More formal academic term' },
+      { simple: /\bsmall\b/gi, advanced: 'minor', explanation: 'More academic vocabulary' },
       { simple: /\bget\b/gi, advanced: 'obtain', explanation: 'More formal verb choice' },
-      { simple: /\bmake\s+sure\b/gi, advanced: 'ensure', explanation: 'More concise academic language' }
+      { simple: /\bmake\s+sure\b/gi, advanced: 'ensure', explanation: 'More concise academic language' },
+      { simple: /\bshow\b/gi, advanced: 'demonstrate', explanation: 'Better for academic writing' },
+      { simple: /\bthing\b/gi, advanced: 'aspect', explanation: 'More specific academic term' },
+      { simple: /\bhelp\s+with\b/gi, advanced: 'assist with', explanation: 'More formal verb' },
+      { simple: /\bthink\s+about\b/gi, advanced: 'consider', explanation: 'More precise academic verb' },
+      { simple: /\btalk\s+about\b/gi, advanced: 'discuss', explanation: 'More formal verb' },
+      { simple: /\buse\b/gi, advanced: 'utilize', explanation: 'More sophisticated vocabulary' },
+      { simple: /\bstart\b/gi, advanced: 'commence', explanation: 'More formal academic term' },
+      { simple: /\bgood\b/gi, advanced: 'favorable', explanation: 'More sophisticated descriptor' },
+      { simple: /\bnice\b/gi, advanced: 'pleasant', explanation: 'More precise vocabulary' },
+      { simple: /\balso\b/gi, advanced: 'furthermore', explanation: 'Better transition word' },
+      { simple: /\bbut\b/gi, advanced: 'however', explanation: 'More formal transition' }
     ];
 
-    basicVocabularyMappings.forEach((mapping, index) => {
+    vocabularyMappings.forEach((mapping, index) => {
       let match;
       while ((match = mapping.simple.exec(text)) !== null) {
-        console.log(`💡 Found basic vocabulary improvement: "${match[0]}" -> "${mapping.advanced}"`);
+        console.log(`💡 Found vocabulary improvement: "${match[0]}" -> "${mapping.advanced}"`);
         suggestions.push({
-          id: `vocab-${index}-${match.index}`,
+          id: `fallback-vocab-${index}-${match.index}`,
           type: 'vocabulary',
           severity: 'suggestion',
           originalText: match[0],
           suggestedText: mapping.advanced,
-          explanation: mapping.explanation + ' (GPT-4o provides more sophisticated suggestions)',
+          explanation: mapping.explanation + ' (Upgrade to AI suggestions with OpenAI API key)',
           position: {
             start: match.index,
             end: match.index + match[0].length
           },
-          confidence: 0.7, // Lower confidence since GPT-4o handles advanced vocabulary
-          rule: 'basic-vocabulary-enhancement'
+          confidence: 0.6,
+          rule: 'fallback-vocabulary-enhancement'
         });
       }
     });
 
-    console.log(`📚 Basic vocabulary suggestions found: ${suggestions.length} improvements (GPT-4o handles advanced vocabulary)`);
+    console.log(`📚 Fallback vocabulary suggestions found: ${suggestions.length} improvements`);
     return suggestions;
   }
 
@@ -299,32 +314,38 @@ export class EnhancedAiService {
   }
 
   private getFallbackAnalysis(text: string, _userProfile?: UserProfile): AnalysisResult {
-    console.log('🔄 Using fallback analysis - OpenAI failed, using comprehensive regex patterns');
+    console.log('🔄 Using fallback analysis - OpenAI not available, using comprehensive patterns including vocabulary suggestions');
     
-    // Use the comprehensive regex-based analysis as fallback
+    // Use the comprehensive regex-based analysis as fallback INCLUDING vocabulary suggestions
     const quickSuggestions = this.getQuickSuggestions(text);
+    const vocabSuggestions = this.getFallbackVocabularySuggestions(text);
+    const allSuggestions = [...quickSuggestions, ...vocabSuggestions];
     
     // Calculate score based on error density
     const wordCount = text.trim().split(/\s+/).filter(word => word.length > 0).length;
-    const errorRate = quickSuggestions.length / Math.max(wordCount, 1);
+    const errorRate = allSuggestions.filter(s => s.severity === 'error').length / Math.max(wordCount, 1);
     let score = Math.max(20, 100 - (errorRate * 200)); // More aggressive scoring
     
+    const errorCount = allSuggestions.filter(s => s.severity === 'error').length;
+    const vocabCount = allSuggestions.filter(s => s.type === 'vocabulary').length;
+    
     console.log(`📊 Fallback analysis results:`);
-    console.log(`   - ${quickSuggestions.length} errors found in ${wordCount} words`);
+    console.log(`   - ${allSuggestions.length} total suggestions (${errorCount} errors, ${vocabCount} vocabulary)`);
     console.log(`   - Error rate: ${Math.round(errorRate * 100)}%`);
     console.log(`   - Calculated score: ${Math.round(score)}`);
-    console.log(`   - Error details:`, quickSuggestions.map(s => `"${s.originalText}" -> "${s.suggestedText}"`));
+    console.log(`   - Suggestions:`, allSuggestions.map(s => `"${s.originalText}" -> "${s.suggestedText}" (${s.type})`));
     
     return {
-      suggestions: quickSuggestions,
+      suggestions: allSuggestions,
       metrics: this.calculateMetrics(text),
       overallScore: Math.round(score),
-      strengths: quickSuggestions.length === 0 ? ['No obvious errors detected', 'Good text structure'] : ['Text has clear narrative flow'],
-      areasForImprovement: quickSuggestions.length > 0 ? 
+      strengths: allSuggestions.length === 0 ? ['No obvious errors detected', 'Good text structure'] : ['Text has clear narrative flow'],
+      areasForImprovement: allSuggestions.length > 0 ? 
         [
           'Focus on spelling accuracy',
           'Check verb tenses for consistency', 
-          'Review grammar rules'
+          'Consider vocabulary enhancements',
+          'Set up OpenAI API key for AI-powered suggestions'
         ] : 
         ['Continue writing to get more detailed feedback']
     };

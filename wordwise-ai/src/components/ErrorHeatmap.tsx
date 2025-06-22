@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, TrendingUp, /* TrendingDown, */ AlertTriangle, CheckCircle, Info, BarChart3 } from 'lucide-react';
+import { X, TrendingUp, /* TrendingDown, */ AlertTriangle, CheckCircle, Info, BarChart3, Lightbulb } from 'lucide-react';
 import type { ErrorHeatmapData } from '../services/errorPatternService';
 import { errorPatternService } from '../services/errorPatternService';
 
@@ -23,6 +23,7 @@ const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ data, onClose }) => {
   // Calculate category averages
   const categoryStats = Object.entries(groupedPatterns).map(([category, patterns]) => {
     const totalErrors = patterns.reduce((sum, p) => sum + p.count, 0);
+    const totalFixed = patterns.reduce((sum, p) => sum + p.fixedCount, 0);
     const totalOpportunities = patterns.reduce((sum, p) => sum + p.totalOpportunities, 0);
     const avgAccuracy = patterns.reduce((sum, p) => sum + p.accuracy, 0) / patterns.length;
     
@@ -32,6 +33,7 @@ const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ data, onClose }) => {
       category,
       patterns,
       totalErrors,
+      totalFixed,
       totalOpportunities,
       avgAccuracy: Math.round(avgAccuracy),
       color: categoryColor,
@@ -133,7 +135,10 @@ const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ data, onClose }) => {
                       {category.avgAccuracy}%
                     </div>
                     <div className="text-sm text-gray-500">
-                      {category.totalErrors}/{category.totalOpportunities} errors
+                      {category.totalErrors} errors • {category.totalFixed} fixed
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {category.totalOpportunities} total opportunities
                     </div>
                   </div>
                 </div>
@@ -157,8 +162,13 @@ const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ data, onClose }) => {
                         </span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {pattern.count} errors, {pattern.totalOpportunities} opportunities
+                        {pattern.count} errors • {pattern.fixedCount} fixed • {pattern.totalOpportunities} opportunities
                       </div>
+                      {pattern.fixedCount > 0 && (
+                        <div className="text-xs text-green-600 mt-1 font-medium">
+                          ✅ {pattern.fixedCount} error{pattern.fixedCount > 1 ? 's' : ''} fixed!
+                        </div>
+                      )}
                       {pattern.examples.length > 0 && (
                         <div className="text-xs text-gray-600 mt-1 italic">
                           Example: "{pattern.examples[0]}"
@@ -175,16 +185,59 @@ const ErrorHeatmap: React.FC<ErrorHeatmapProps> = ({ data, onClose }) => {
             <div className="text-center py-12">
               <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Error Patterns Yet</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-6">
                 Start writing and analyzing your text to see your error patterns appear here.
                 <br />
                 The more you write, the more accurate your heatmap will become!
+              </p>
+              <button
+                onClick={() => {
+                  errorPatternService.addDemoData();
+                  const newData = errorPatternService.getErrorHeatmapData();
+                  window.location.reload(); // Simple way to refresh the component with new data
+                }}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                📊 Add Demo Data to See Heatmap
+              </button>
+              <p className="text-sm text-gray-500 mt-3">
+                This will add sample error patterns so you can see how the heatmap works
               </p>
             </div>
           )}
         </div>
 
         {/* Tips Section */}
+        <div className="p-6 bg-gray-50 border-t">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Lightbulb className="h-5 w-5 mr-2 text-yellow-500" />
+            How to Improve Your Accuracy
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">📈 How Accuracy Works</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• <strong>Accuracy = Correct Usage / Total Opportunities</strong></li>
+                <li>• Categories start at 75% baseline accuracy</li>
+                <li>• Making errors decreases accuracy in that category</li>
+                <li>• <strong>Fixing errors gives up to 5% bonus</strong> (motivation to improve!)</li>
+                <li>• Consistent good usage (20+ opportunities, &lt;10% errors) gets a 5% bonus</li>
+                <li>• Writing more text increases opportunities and helps accuracy</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">💡 Improvement Tips</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• <strong>Apply grammar suggestions to boost accuracy</strong></li>
+                <li>• Focus on your lowest accuracy categories first</li>
+                <li>• Write more content to increase opportunities</li>
+                <li>• Watch your fixed errors count go up! ✅</li>
+                <li>• Practice writing sentences that use your weak areas</li>
+                <li>• Check patterns in your recent errors for common mistakes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
         {categoryStats.length > 0 && (
           <div className="p-6 bg-gray-50 border-t">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">

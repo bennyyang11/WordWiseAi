@@ -108,6 +108,32 @@ function findGrammarIssues(text: string): Suggestion[] {
       type: 'grammar' as const,
       message: 'These are uncountable nouns - use singular form',
       replacement: (match: string) => match.replace(/s$/i, '')
+    },
+    // Capitalization after periods - only match first letter of words
+    {
+      regex: /([.!?]\s+)\b([a-z])/g,
+      type: 'grammar' as const,
+      message: 'First letter after period must be capitalized',
+      replacement: (match: string) => {
+        const parts = match.match(/([.!?]\s+)\b([a-z])/);
+        if (parts) {
+          return parts[1] + parts[2].toUpperCase();
+        }
+        return match;
+      }
+    },
+    // Capitalization at start of text - only match first letter of words
+    {
+      regex: /^(\s*)\b([a-z])/,
+      type: 'grammar' as const,
+      message: 'First letter of text must be capitalized',
+      replacement: (match: string) => {
+        const parts = match.match(/^(\s*)\b([a-z])/);
+        if (parts) {
+          return (parts[1] || '') + parts[2].toUpperCase();
+        }
+        return match;
+      }
     }
   ];
 

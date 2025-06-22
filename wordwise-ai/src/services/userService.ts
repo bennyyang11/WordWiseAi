@@ -96,6 +96,8 @@ class UserService {
 
   async saveEssay(essayData: Omit<EssayData, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
+      console.log('🔄 Starting essay save process...', { userId: essayData.userId, title: essayData.title });
+      
       const essayDocRef = doc(collection(db, this.ESSAYS_COLLECTION));
       const essayWithTimestamps = {
         ...essayData,
@@ -103,12 +105,21 @@ class UserService {
         updatedAt: serverTimestamp()
       };
       
+      console.log('📝 Saving essay to Firestore...');
       await setDoc(essayDocRef, essayWithTimestamps);
+      console.log('✅ Essay document saved successfully');
       
-      // Update user statistics
-      await this.updateUserStats(essayData.userId, essayData.wordCount, essayData.overallScore);
+      // Update user statistics (don't let this fail the main save)
+      try {
+        console.log('📊 Updating user statistics...');
+        await this.updateUserStats(essayData.userId, essayData.wordCount, essayData.overallScore);
+        console.log('✅ User statistics updated successfully');
+      } catch (statsError) {
+        console.warn('⚠️ Failed to update user stats, but essay was saved:', statsError);
+        // Don't throw - the essay save was successful
+      }
       
-      console.log('✅ Essay saved successfully');
+      console.log('✅ Essay saved successfully with ID:', essayDocRef.id);
       return essayDocRef.id;
     } catch (error) {
       console.error('❌ Error saving essay:', error);
@@ -162,8 +173,19 @@ class UserService {
 
   private async updateUserStats(userId: string, wordCount: number, score?: number): Promise<void> {
     try {
+      console.log('📊 Fetching user profile for stats update...', { userId });
       const userProfile = await this.getUserProfile(userId);
-      if (!userProfile) return;
+      
+      if (!userProfile) {
+        console.warn('⚠️ User profile not found, skipping stats update:', userId);
+        return;
+      }
+
+      console.log('📊 Current user stats:', {
+        totalEssays: userProfile.totalEssaysWritten,
+        totalWords: userProfile.totalWordsWritten,
+        averageScore: userProfile.averageScore
+      });
 
       const newTotalEssays = (userProfile.totalEssaysWritten || 0) + 1;
       const newTotalWords = (userProfile.totalWordsWritten || 0) + wordCount;
@@ -174,11 +196,15 @@ class UserService {
         newAverageScore = (currentTotalScore + score) / newTotalEssays;
       }
 
-      await this.updateUserProfile(userId, {
+      const statsUpdate = {
         totalEssaysWritten: newTotalEssays,
         totalWordsWritten: newTotalWords,
         averageScore: Math.round(newAverageScore * 100) / 100 // Round to 2 decimal places
-      });
+      };
+
+      console.log('📊 Updating user stats with:', statsUpdate);
+      await this.updateUserProfile(userId, statsUpdate);
+      console.log('✅ User stats updated successfully');
     } catch (error) {
       console.error('❌ Error updating user stats:', error);
       // Don't throw error here to avoid breaking essay save
